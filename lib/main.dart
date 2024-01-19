@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import 'router.dart';
 import 'app_lifecycle/app_lifecycle.dart';
 import 'audio/audio_controller.dart';
-import 'player_progress/player_progress.dart';
 import 'settings/settings.dart';
 import 'style/palette.dart';
 
@@ -27,7 +26,6 @@ class MyGame extends StatelessWidget {
       child: MultiProvider(
         providers: [
           Provider(create: (context) => Palette()),
-          ChangeNotifierProvider(create: (context) => PlayerProgress()),
           Provider(create: (context) => SettingsController()),
           // Set up audio.
           ProxyProvider2<SettingsController, AppLifecycleStateNotifier,
@@ -46,7 +44,7 @@ class MyGame extends StatelessWidget {
           final palette = context.watch<Palette>();
 
           return MaterialApp.router(
-            title: 'Endless Runner',
+            title: 'Sandbox app',
             theme: flutterNesTheme().copyWith(
               colorScheme: ColorScheme.fromSeed(
                 seedColor: palette.seed.color,
