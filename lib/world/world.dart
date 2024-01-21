@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:endless_runner/world/components/player/player.dart';
+import 'package:endless_runner/world/components/zombie.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
@@ -6,12 +9,17 @@ import 'package:flame/input.dart';
 import 'package:flame/palette.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flame_tiled/flame_tiled.dart';
+import 'package:flame/experimental.dart';
 
 class World extends FlameGame with HasCollisionDetection, CollisionCallbacks {
   late final Player player;
-  late final JoystickComponent joystick;
+  late final JoystickComponent joystickMove;
+  late final JoystickComponent joystickAngle;
   late final TextComponent speedText;
   late final TextComponent directionText;
+  late final TextComponent animationText;
+  late TiledComponent mapComponent;
 
   @override
   Color backgroundColor() => const Color(0xFFeeeeee);
@@ -21,68 +29,32 @@ class World extends FlameGame with HasCollisionDetection, CollisionCallbacks {
 
   @override
   Future<void> onLoad() async {
+    mapComponent = await TiledComponent.load('test.tmx', Vector2.all(32));
+    world.add(mapComponent);
+
     final knobPaint = BasicPalette.black.withAlpha(150).paint();
     final backgroundPaint = BasicPalette.black.withAlpha(100).paint();
 
     world.add(ScreenHitbox());
 
-    joystick = JoystickComponent(
+    joystickMove = JoystickComponent(
       knob: CircleComponent(radius: 15, paint: knobPaint),
       background: CircleComponent(radius: 50, paint: backgroundPaint),
       margin: const EdgeInsets.only(left: 15, bottom: 15),
     );
+    joystickAngle = JoystickComponent(
+      knob: CircleComponent(radius: 15, paint: knobPaint),
+      background: CircleComponent(radius: 50, paint: backgroundPaint),
+      margin: const EdgeInsets.only(right: 15, bottom: 15),
+    );
 
-    player = Player(joystick, camera);
+    player = Player(joystickMove, joystickAngle, camera);
     world.add(player);
 
-    camera.viewport.add(joystick);
+    camera.viewport.add(joystickMove);
+    camera.viewport.add(joystickAngle);
     camera.setBounds(null, considerViewport: true);
     camera.follow(player, maxSpeed: 200, snap: true);
-
-    final paint = BasicPalette.gray.paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    world.add(
-      CircleComponent(
-        position: Vector2(100, 100),
-        radius: 50,
-        paint: paint,
-        children: [CircleHitbox(isSolid: true)],
-      ),
-    );
-    world.add(
-      CircleComponent(
-        position: Vector2(150, 500),
-        radius: 50,
-        paint: paint,
-        children: [CircleHitbox(isSolid: true)],
-      ),
-    );
-    world.add(
-      RectangleComponent(
-        position: Vector2.all(300),
-        size: Vector2.all(100),
-        paint: paint,
-        children: [RectangleHitbox(isSolid: true)],
-      ),
-    );
-    world.add(
-      RectangleComponent(
-        position: Vector2.all(500),
-        size: Vector2(100, 200),
-        paint: paint,
-        children: [RectangleHitbox(isSolid: true)],
-      ),
-    );
-    world.add(
-      RectangleComponent(
-        position: Vector2(550, 200),
-        size: Vector2(200, 150),
-        paint: paint,
-        children: [RectangleHitbox(isSolid: true)],
-      ),
-    );
 
     if (kDebugMode) {
       final regular = TextPaint(
@@ -96,7 +68,10 @@ class World extends FlameGame with HasCollisionDetection, CollisionCallbacks {
         text: 'Direction: idle',
         textRenderer: regular,
       );
-
+      animationText = TextComponent(
+        text: 'Aniamtion: idle',
+        textRenderer: regular,
+      );
       final speedWithMargin = HudMarginComponent(
         margin: const EdgeInsets.only(
           top: 15,
@@ -111,23 +86,41 @@ class World extends FlameGame with HasCollisionDetection, CollisionCallbacks {
         ),
       )..add(directionText);
 
+      final animationWithMargin = HudMarginComponent(
+        margin: const EdgeInsets.only(
+          top: 45,
+          left: 15,
+        ),
+      )..add(animationText);
+
       add(FpsTextComponent(position: Vector2(15, 0), textRenderer: regular));
-      camera.viewport.addAll([speedWithMargin, directionWithMargin]);
+      camera.viewport
+          .addAll([speedWithMargin, directionWithMargin, animationWithMargin]);
     }
+
+    world.add(
+      SpawnComponent.periodRange(
+        factory: (_) => Zombie(),
+        minPeriod: 3.0,
+        maxPeriod: 5.0,
+        area: Rectangle.fromPoints(
+          Vector2(0, 1200),
+          Vector2(1200, 0),
+        ),
+        random: Random(),
+        // selfPositioning: true,
+      ),
+    );
   }
 
   @override
   void update(double dt) {
     super.update(dt);
-    speedText.text = 'Speed: ${(joystick.intensity * player.maxSpeed).round()}';
+    speedText.text =
+        'Speed: ${(joystickMove.intensity * player.maxSpeed).round()}';
     final direction =
-        joystick.direction.toString().replaceAll('JoystickDirection.', '');
+        joystickMove.direction.toString().replaceAll('JoystickDirection.', '');
     directionText.text = 'Direction: $direction';
-
-    // if (player.isColliding) {
-    //   camera.stop();
-    // } else {
-    //   camera.follow(player, maxSpeed: 250, snap: true);
-    // }
+    animationText.text = 'Animation : ${(player.current)}';
   }
 }

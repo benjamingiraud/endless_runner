@@ -23,6 +23,7 @@ dependencies:
   nes_ui: ^0.10.0
   google_fonts: ^6.1.0
   logging: ^1.2.0
+  flame_tiled: ^1.18.3
 
 dev_dependencies:
   flame_test: ^1.14.0
@@ -37,9 +38,10 @@ flutter:
 
   assets:
     - assets/images/
-    - assets/images/dash/
+    - assets/images/player/
     - assets/images/enemies/
     - assets/images/scenery/
+    - assets/tiles/
     - assets/music/
     - assets/sfx/
 
