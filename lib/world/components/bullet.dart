@@ -5,6 +5,8 @@ import 'package:flame/image_composition.dart';
 
 class Bullet extends SpriteComponent with CollisionCallbacks {
   final Vector2 speed;
+  @override
+  final double angle;
   final Image spriteImage;
   final double lifeTime;
   final double damage;
@@ -13,12 +15,14 @@ class Bullet extends SpriteComponent with CollisionCallbacks {
   Bullet({
     required Vector2 position,
     required this.speed,
+    required this.angle,
     required this.spriteImage,
     this.lifeTime = 0.2,
     this.damage = 0,
   }) : super(
           sprite: Sprite(spriteImage),
           position: position,
+          angle: angle,
         ) {
     // To avoid performance issues, remove bullet in desired time
     lifeTimeTimer = Timer(lifeTime, onTick: () {
@@ -32,7 +36,7 @@ class Bullet extends SpriteComponent with CollisionCallbacks {
     super.update(dt);
     lifeTimeTimer?.update(dt);
     // Mettez à jour la position de la balle en fonction de la vitesse et de l'angle
-    position.add(speed * dt);
+    // position.add(speed * dt);
   }
 
   @override
@@ -41,10 +45,10 @@ class Bullet extends SpriteComponent with CollisionCallbacks {
     PositionComponent other,
   ) {
     if (other is Health) {
-      (other as Health).damage(damage);
+      // (other as Health).damage(damage);
     }
     super.onCollisionStart(intersectionPoints, other);
-    lifeTimeTimer?.stop();
-    removeFromParent();
+    // lifeTimeTimer?.stop();
+    // removeFromParent();
   }
 }

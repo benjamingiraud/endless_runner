@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:endless_runner/world/components/bullet.dart';
-import 'package:endless_runner/world/components/zombie.dart';
 import 'package:endless_runner/world/mixins/health.dart';
 import 'package:flame/cache.dart';
 import 'package:flame/collisions.dart';
@@ -11,11 +10,11 @@ import 'package:flutter/foundation.dart';
 
 class Player extends SpriteAnimationGroupComponent<PlayerState>
     with HasGameRef, CollisionCallbacks, HasWorldReference<World>, Health {
-  final _totalAmmo = ValueNotifier(16);
-  final _magazineAmmo = ValueNotifier(8);
+  final totalAmmo = ValueNotifier(9999);
+  final magazineAmmo = ValueNotifier(8);
   double bulletSpeed = 1000.0;
   double bulletDamage = 25.0;
-  double shootingInterval = 0.5; // Intervalle de tir en secondes
+  double shootingInterval = 0.05; // Intervalle de tir en secondes
   double reloadInterval = 2.0; // Intervalle de réchargement en secondes
   Timer? shootingTimer;
   Timer? reloadTimer;
@@ -61,7 +60,7 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
         SpriteAnimationData.sequenced(
           amount: 20,
           textureSize: Vector2(129, 110),
-          stepTime: 0.1,
+          stepTime: 0.05,
         ),
       ),
       PlayerState.handgunShoot: await game.loadSpriteAnimation(
@@ -86,14 +85,14 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
 
     add(CircleHitbox()..renderShape = false);
 
-    _magazineAmmo.addListener(() {
-      if (_magazineAmmo.value == 0) {
+    magazineAmmo.addListener(() {
+      if (magazineAmmo.value == 0) {
         current = PlayerState.handgunReload;
         reloadTimer = Timer(reloadInterval, onTick: () {
           const int reloadAmmount = 8;
-          if (_totalAmmo.value >= reloadAmmount) {
-            _totalAmmo.value -= reloadAmmount;
-            _magazineAmmo.value = reloadAmmount;
+          if (totalAmmo.value >= reloadAmmount) {
+            totalAmmo.value -= reloadAmmount;
+            magazineAmmo.value = reloadAmmount;
           }
         });
       }
@@ -102,7 +101,7 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
 
   bool isShooting() => !joystickAngle.delta.isZero();
   bool isMoving() => !joystickMove.delta.isZero();
-  bool canShoot() => _magazineAmmo.value > 0 && !hasShot;
+  bool canShoot() => magazineAmmo.value > 0 && !hasShot;
   bool hasShot = false;
 
   @override
@@ -144,17 +143,29 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   }
 
   void shootBullet() {
-    // Ajouter votre logique pour créer une balle ici
+    final offsetX = cos(angle) * (size.x / 2);
+    final bulletX = position.x + offsetX;
+
+    final offsetY = sin(angle) * (size.y / 2);
+    final bulletY = position.y + offsetY;
+
+    final bulletDirection = Vector2(
+      cos(angle) * bulletSpeed,
+      sin(angle) * bulletSpeed,
+    );
+
     final bullet = Bullet(
-      position: Vector2(117, 79),
-      speed: Vector2(bulletSpeed, 0),
+      // position: Vector2(position.x + 117, position.y + 79),
+      position: Vector2(bulletX, bulletY),
+      speed: bulletDirection,
+      angle: angle,
       spriteImage: images.fromCache('player/bullet.png'),
       lifeTime: 5.0,
       damage: bulletDamage,
     );
     // Ajoutez la balle à votre jeu
-    add(bullet);
-    _magazineAmmo.value -= 1;
+    world.add(bullet);
+    magazineAmmo.value -= 1;
   }
 
   @override

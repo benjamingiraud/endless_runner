@@ -16,9 +16,12 @@ class World extends FlameGame with HasCollisionDetection, CollisionCallbacks {
   late final Player player;
   late final JoystickComponent joystickMove;
   late final JoystickComponent joystickAngle;
+
   late final TextComponent speedText;
   late final TextComponent directionText;
   late final TextComponent animationText;
+  late final TextComponent ammoText;
+  
   late TiledComponent mapComponent;
 
   @override
@@ -72,6 +75,11 @@ class World extends FlameGame with HasCollisionDetection, CollisionCallbacks {
         text: 'Aniamtion: idle',
         textRenderer: regular,
       );
+      ammoText = TextComponent(
+        text: 'Munitions : ${(player.magazineAmmo)}/${(player.totalAmmo)}',
+        textRenderer: regular,
+      );
+
       final speedWithMargin = HudMarginComponent(
         margin: const EdgeInsets.only(
           top: 15,
@@ -93,34 +101,48 @@ class World extends FlameGame with HasCollisionDetection, CollisionCallbacks {
         ),
       )..add(animationText);
 
+      final ammoWithMargin = HudMarginComponent(
+        margin: const EdgeInsets.only(
+          top: 60,
+          left: 15,
+        ),
+      )..add(ammoText);
+
       add(FpsTextComponent(position: Vector2(15, 0), textRenderer: regular));
-      camera.viewport
-          .addAll([speedWithMargin, directionWithMargin, animationWithMargin]);
+      camera.viewport.addAll([
+        speedWithMargin,
+        directionWithMargin,
+        animationWithMargin,
+        ammoWithMargin
+      ]);
     }
 
-    world.add(
-      SpawnComponent.periodRange(
-        factory: (_) => Zombie(),
-        minPeriod: 3.0,
-        maxPeriod: 5.0,
-        area: Rectangle.fromPoints(
-          Vector2(0, 1200),
-          Vector2(1200, 0),
-        ),
-        random: Random(),
-        // selfPositioning: true,
-      ),
-    );
+    // world.add(
+    //   SpawnComponent.periodRange(
+    //     factory: (_) => Zombie(),
+    //     minPeriod: 3.0,
+    //     maxPeriod: 5.0,
+    //     area: Rectangle.fromPoints(
+    //       Vector2(0, 1200),
+    //       Vector2(1200, 0),
+    //     ),
+    //     random: Random(),
+    //     // selfPositioning: true,
+    //   ),
+    // );
   }
 
   @override
   void update(double dt) {
     super.update(dt);
+
     speedText.text =
         'Speed: ${(joystickMove.intensity * player.maxSpeed).round()}';
     final direction =
         joystickMove.direction.toString().replaceAll('JoystickDirection.', '');
     directionText.text = 'Direction: $direction';
     animationText.text = 'Animation : ${(player.current)}';
+    ammoText.text =
+        'Munitions : ${(player.magazineAmmo.value)}/${(player.totalAmmo.value)}';
   }
 }
