@@ -4,6 +4,7 @@ import 'package:endless_runner/world/components/player/player.dart';
 import 'package:endless_runner/world/components/zombie.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flame/palette.dart';
@@ -12,7 +13,12 @@ import 'package:flutter/material.dart';
 import 'package:flame_tiled/flame_tiled.dart';
 import 'package:flame/experimental.dart';
 
-class World extends FlameGame with HasCollisionDetection, CollisionCallbacks {
+class World extends FlameGame
+    with
+        HasCollisionDetection,
+        CollisionCallbacks,
+        ScrollDetector,
+        ScaleDetector {
   late final Player player;
   late final JoystickComponent joystickMove;
   late final JoystickComponent joystickAngle;
@@ -21,7 +27,7 @@ class World extends FlameGame with HasCollisionDetection, CollisionCallbacks {
   late final TextComponent directionText;
   late final TextComponent animationText;
   late final TextComponent ammoText;
-  
+
   late TiledComponent mapComponent;
 
   @override
@@ -120,8 +126,8 @@ class World extends FlameGame with HasCollisionDetection, CollisionCallbacks {
     // world.add(
     //   SpawnComponent.periodRange(
     //     factory: (_) => Zombie(),
-    //     minPeriod: 3.0,
-    //     maxPeriod: 5.0,
+    //     minPeriod: 1.0,
+    //     maxPeriod: 2.0,
     //     area: Rectangle.fromPoints(
     //       Vector2(0, 1200),
     //       Vector2(1200, 0),
@@ -130,6 +136,9 @@ class World extends FlameGame with HasCollisionDetection, CollisionCallbacks {
     //     // selfPositioning: true,
     //   ),
     // );
+
+    world.add(Zombie(
+        position: Vector2(200, 200), currentHealth: 1000, maxHealth: 1000));
   }
 
   @override
@@ -144,5 +153,38 @@ class World extends FlameGame with HasCollisionDetection, CollisionCallbacks {
     animationText.text = 'Animation : ${(player.current)}';
     ammoText.text =
         'Munitions : ${(player.magazineAmmo.value)}/${(player.totalAmmo.value)}';
+  }
+
+  // Camera zoom
+  void clampZoom() {
+    camera.viewfinder.zoom = camera.viewfinder.zoom.clamp(0.5, 2.0);
+  }
+
+  static const zoomPerScrollUnit = 0.1;
+
+  @override
+  void onScroll(PointerScrollInfo info) {
+    camera.viewfinder.zoom +=
+        info.scrollDelta.global.y.sign * zoomPerScrollUnit;
+    clampZoom();
+  }
+
+  late double startZoom;
+
+  @override
+  void onScaleStart(_) {
+    startZoom = camera.viewfinder.zoom;
+  }
+
+  @override
+  void onScaleUpdate(ScaleUpdateInfo info) {
+    final currentScale = info.scale.global;
+    if (!currentScale.isIdentity()) {
+      camera.viewfinder.zoom = startZoom * currentScale.y;
+      clampZoom();
+    } else {
+      final delta = info.delta.global;
+      camera.viewfinder.position.translate(-delta.x, -delta.y);
+    }
   }
 }

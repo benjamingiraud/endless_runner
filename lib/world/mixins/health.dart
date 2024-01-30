@@ -1,5 +1,10 @@
+import 'dart:math';
+
+import 'package:endless_runner/world/components/bullet.dart';
 import 'package:endless_runner/world/components/health_bar.dart';
+import 'package:endless_runner/world/components/zombie.dart';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
 
 mixin Health on Component {
@@ -35,7 +40,49 @@ mixin Health on Component {
   ValueNotifier<double> get healthNotifier => _health;
   ValueNotifier<double> get shieldNotifier => _shield;
 
-  void damage(double amount) {
+  void damage(double amount, {PositionComponent? damager}) {
+    // if current entity has paint, color overlay sprite in red
+    if (this is HasPaint) {
+      final effect = ColorEffect(
+        Colors.red,
+        EffectController(
+          duration: 0.5,
+          alternate: true,
+        ),
+        opacityFrom: 0,
+        opacityTo: 0.32,
+      );
+      add(effect);
+    }
+
+    if (this is Zombie) {
+      if (damager is Bullet) {
+        // check if the zombie is not already rotating and then rotate it
+        bool shouldRotate = true;
+        for (var child in children) {
+          if (child is RotateEffect) {
+            shouldRotate = false;
+          }
+        }
+        if (shouldRotate) {
+          add(
+            RotateEffect.by(
+              (this as PositionComponent)
+                  .angleTo(damager.player.absolutePosition),
+              LinearEffectController(0.25),
+              onComplete: () => {
+                // add(MoveToEffect(
+                //     damager.player.position, LinearEffectController(5),
+                //     target: damager.player))
+                (this as Zombie).target = damager.player
+              },
+            ),
+          );
+        }
+        // MoveEffect.to(damager.player.position, LinearEffectController(5), );
+      }
+    }
+
     if (_shield.value > 0) {
       _shield.value = (_shield.value - amount).clamp(0.0, _maxShield);
     } else {

@@ -12,9 +12,9 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     with HasGameRef, CollisionCallbacks, HasWorldReference<World>, Health {
   final totalAmmo = ValueNotifier(9999);
   final magazineAmmo = ValueNotifier(8);
-  double bulletSpeed = 1000.0;
+  double bulletSpeed = 2000.0;
   double bulletDamage = 25.0;
-  double shootingInterval = 0.05; // Intervalle de tir en secondes
+  double shootingInterval = 0.5; // Intervalle de tir en secondes
   double reloadInterval = 2.0; // Intervalle de réchargement en secondes
   Timer? shootingTimer;
   Timer? reloadTimer;
@@ -37,7 +37,7 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   }
 
   Player(this.joystickMove, this.joystickAngle, this.camera)
-      : super(anchor: Anchor.center) {
+      : super(anchor: Anchor.center, nativeAngle: pi/2) {
     initializeHealthMixin(100, 50);
   }
 
@@ -68,7 +68,7 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
         SpriteAnimationData.sequenced(
           amount: 3,
           textureSize: Vector2(128, 108),
-          stepTime: 0.1,
+          stepTime: shootingInterval / 3,
         ),
       ),
       PlayerState.handgunReload: await game.loadSpriteAnimation(
@@ -76,7 +76,7 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
         SpriteAnimationData.sequenced(
           amount: 15,
           textureSize: Vector2(130, 115),
-          stepTime: 0.1,
+          stepTime: reloadInterval / 15,
         ),
       ),
     };
@@ -143,10 +143,11 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   }
 
   void shootBullet() {
-    final offsetX = cos(angle) * (size.x / 2);
+    final ajustedAngle = angle + 0.4;
+    final offsetX = cos(ajustedAngle) * (size.x / 2 + 10);
     final bulletX = position.x + offsetX;
 
-    final offsetY = sin(angle) * (size.y / 2);
+    final offsetY = sin(ajustedAngle) * (size.x / 2 + 10);
     final bulletY = position.y + offsetY;
 
     final bulletDirection = Vector2(
@@ -157,6 +158,7 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     final bullet = Bullet(
       // position: Vector2(position.x + 117, position.y + 79),
       position: Vector2(bulletX, bulletY),
+      player: this,
       speed: bulletDirection,
       angle: angle,
       spriteImage: images.fromCache('player/bullet.png'),
