@@ -1,4 +1,4 @@
-import 'package:endless_runner/world/world.dart';
+import 'package:endless_runner/world/game_main.dart';
 
 import '../audio/audio_controller.dart';
 import 'package:flame/game.dart';
@@ -20,11 +20,11 @@ class GameScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GameWidget<World>(
+      body: GameWidget<GameMain>(
         key: const Key('play session'),
-        game: World(),
+        game: GameMain(),
         overlayBuilderMap: {
-          backButtonKey: (BuildContext context, World game) {
+          backButtonKey: (BuildContext context, GameMain game) {
             return Positioned(
               top: 20,
               right: 10,

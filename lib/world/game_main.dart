@@ -1,22 +1,21 @@
-import 'dart:math';
-
 import 'package:endless_runner/world/components/player/player.dart';
 import 'package:endless_runner/world/components/zombie.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
+import 'package:flame/experimental.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flame/palette.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flame_tiled/flame_tiled.dart';
-import 'package:flame/experimental.dart';
 
-class World extends FlameGame
+class GameMain extends FlameGame
     with
         HasCollisionDetection,
         CollisionCallbacks,
+        HasTimeScale,
         ScrollDetector,
         ScaleDetector {
   late final Player player;
@@ -30,11 +29,14 @@ class World extends FlameGame
 
   late TiledComponent mapComponent;
 
+  // TimeManager timeManager = TimeManager();
+  // DayNightManager dayNightCycle = DayNightManager();
+
   @override
   Color backgroundColor() => const Color(0xFFeeeeee);
 
   @override
-  // bool debugMode = kDebugMode ? true : false;
+  bool debugMode = kDebugMode ? true : false;
 
   @override
   Future<void> onLoad() async {
@@ -62,7 +64,9 @@ class World extends FlameGame
 
     camera.viewport.add(joystickMove);
     camera.viewport.add(joystickAngle);
-    camera.setBounds(null, considerViewport: true);
+    camera.setBounds(
+        Rectangle.fromLTWH(0, 0, mapComponent.size.x, mapComponent.size.y),
+        considerViewport: false);
     camera.follow(player, maxSpeed: 200, snap: true);
 
     if (kDebugMode) {
@@ -138,12 +142,17 @@ class World extends FlameGame
     // );
 
     world.add(Zombie(
-        position: Vector2(200, 200), currentHealth: 1000, maxHealth: 1000));
+        position: Vector2(200, 200), currentHealth: 100, maxHealth: 100));
+    world.add(Zombie(
+        position: Vector2(400, 200), currentHealth: 100, maxHealth: 100));
+    // world.add(Zombie(
+    //     position: Vector2(200, 400), currentHealth: 100, maxHealth: 100));
   }
 
   @override
   void update(double dt) {
     super.update(dt);
+    // timeManager.update(dt);
 
     speedText.text =
         'Speed: ${(joystickMove.intensity * player.maxSpeed).round()}';

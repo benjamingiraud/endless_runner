@@ -1,3 +1,4 @@
+import 'package:endless_runner/world/components/critical_hitbox.dart';
 import 'package:endless_runner/world/mixins/health.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
@@ -46,11 +47,27 @@ class Bullet extends SpriteComponent with CollisionCallbacks {
     Set<Vector2> intersectionPoints,
     PositionComponent other,
   ) {
-    if (other is Health) {
-      (other as Health).damage(damage, damager: this);
-    }
     super.onCollisionStart(intersectionPoints, other);
-    lifeTimeTimer?.stop();
-    removeFromParent();
+    Component otherComponent = other;
+    var finalDamage = damage;
+    var isCritical = false;
+
+    if (other is CriticalHitbox) {
+      isCritical = true;
+      otherComponent = other.parent!;
+      finalDamage = damage * other.critacalMultiplier;
+    }
+
+    if (otherComponent is Health) {
+      otherComponent.damage(finalDamage,
+          damager: this,
+          isCritical: isCritical,
+          intersectionPoints: intersectionPoints);
+    }
+
+    if (other is! ScreenHitbox) {
+      lifeTimeTimer?.stop();
+      removeFromParent();
+    }
   }
 }

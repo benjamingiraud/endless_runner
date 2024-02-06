@@ -1,25 +1,34 @@
 import 'dart:math';
 
 import 'package:endless_runner/world/components/bullet.dart';
+import 'package:endless_runner/world/game_main.dart';
 import 'package:endless_runner/world/mixins/health.dart';
 import 'package:flame/cache.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
+import 'package:flame/input.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 class Player extends SpriteAnimationGroupComponent<PlayerState>
-    with HasGameRef, CollisionCallbacks, HasWorldReference<World>, Health {
+    with
+        CollisionCallbacks,
+        HasWorldReference<World>,
+        HasGameReference<GameMain>,
+        Health {
   final totalAmmo = ValueNotifier(9999);
   final magazineAmmo = ValueNotifier(8);
   double bulletSpeed = 2000.0;
-  double bulletDamage = 25.0;
+  double bulletDamage = 12.5;
   double shootingInterval = 0.5; // Intervalle de tir en secondes
   double reloadInterval = 2.0; // Intervalle de réchargement en secondes
   Timer? shootingTimer;
   Timer? reloadTimer;
 
-  /// Pixels/s
+  // Pixels/s
+  double endurance = 100.0;
+  double speed = 300.0;
   double maxSpeed = 300.0;
   double relativeAngle = -80.0;
   late final Vector2 _lastSize = size.clone();
@@ -30,22 +39,25 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   final CameraComponent camera;
   final images = Images();
 
-  String getDirection() {
-    return joystickMove.direction
-        .toString()
-        .replaceAll('JoystickDirection.', '');
-  }
-
   Player(this.joystickMove, this.joystickAngle, this.camera)
-      : super(anchor: Anchor.center, nativeAngle: pi/2) {
-    initializeHealthMixin(100, 50);
+      : super(
+            anchor: Anchor.center,
+            nativeAngle: pi / 2,
+            scale: Vector2.all(0.75)) {
+    initializeHealthMixin(100,
+        maxShield: 100,
+        currentShield: 50,
+        showText: true,
+        shouldRender: false,
+        barWidth: 200,
+        barHeight: 20,
+        barCentered: false);
   }
 
   @override
   Future<void> onLoad() async {
     // load all images here ?
     await images.load('player/bullet.png');
-
     animations = {
       PlayerState.handgunIdle: await game.loadSpriteAnimation(
         'player/handgun_idle.png',
@@ -83,7 +95,16 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     // The starting state will be that the player is idle with handgun.
     current = PlayerState.handgunIdle;
 
-    add(CircleHitbox()..renderShape = false);
+    add(CircleHitbox(radius: size.x / 3, position: size / 6)
+      ..renderShape = false);
+
+    final healthBarHud = HudMarginComponent(
+      margin: const EdgeInsets.only(
+        bottom: 100,
+        left: 125,
+      ),
+    )..add(healthBar);
+    camera.viewport.add(healthBarHud);
 
     magazineAmmo.addListener(() {
       if (magazineAmmo.value == 0) {
@@ -114,7 +135,7 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
       _lastSize.setFrom(size);
       _lastTransform.setFrom(transform);
       if (activeCollisions.isEmpty) {
-        position.add(joystickMove.relativeDelta * maxSpeed * dt);
+        position.add(joystickMove.relativeDelta * speed * dt);
       }
       if (!isShooting()) {
         angle = joystickMove.delta.screenAngle() - relativeAngle;
@@ -135,10 +156,6 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
           hasShot = false;
         });
       }
-    }
-
-    if (health < maxHealth) {
-      heal(1 + (1 * dt));
     }
   }
 
@@ -178,14 +195,13 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     super.onCollisionStart(intersectionPoints, other);
     transform.setFrom(_lastTransform);
     size.setFrom(_lastSize);
-
-    // if (other is Zombie) {
-    //   damage(20);
-    // }
   }
 
-  @override
-  bool debugMode = true;
+  String getDirection() {
+    return joystickMove.direction
+        .toString()
+        .replaceAll('JoystickDirection.', '');
+  }
 }
 
 enum PlayerState { handgunIdle, handgunMove, handgunShoot, handgunReload }
