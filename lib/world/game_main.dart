@@ -35,8 +35,8 @@ class GameMain extends FlameGame
   @override
   Color backgroundColor() => const Color(0xFFeeeeee);
 
-  @override
-  bool debugMode = kDebugMode ? true : false;
+  // @override
+  // bool debugMode = kDebugMode ? true : false;
 
   @override
   Future<void> onLoad() async {

@@ -25,6 +25,7 @@ class MainMenuScreen extends StatelessWidget {
           fit: BoxFit.cover,
         )),
         child: Scaffold(
+          backgroundColor: Colors.transparent,
           body: ResponsiveScreen(
             squarishMainArea: Center(
               child: Column(
@@ -34,12 +35,32 @@ class MainMenuScreen extends StatelessWidget {
                     angle: -0.1,
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 500),
-                      child: const Text(
-                        'Zombie survival game',
+                      child: Text(
+                        'Zombie survival game'.toUpperCase(),
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'Press Start 2P',
-                          fontSize: 32,
+                        style: const TextStyle(
+                          fontFamily: 'Babas Neue',
+                          fontSize: 48,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                                // bottomLeft
+                                offset: Offset(-1.5, -1.5),
+                                color: Colors.greenAccent),
+                            Shadow(
+                                // bottomRight
+                                offset: Offset(1.5, -1.5),
+                                color: Colors.greenAccent),
+                            Shadow(
+                                // topRight
+                                offset: Offset(1.5, 1.5),
+                                color: Colors.greenAccent),
+                            Shadow(
+                                // topLeft
+                                offset: Offset(-1.5, 1.5),
+                                color: Colors.greenAccent),
+                          ],
+                          fontWeight: FontWeight.bold,
                           height: 1,
                         ),
                       ),
