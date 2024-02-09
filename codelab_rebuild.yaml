@@ -10,6 +10,6 @@ steps:
       - web
       - windows
   - name: Flutter recreate
-    flutter: create --org com.example --project-name endless_runner .
+    flutter: create --org com.example --project-name survival_zombie .
   - name: Remove test/widget_test.dart
     rm: test/widget_test.dart

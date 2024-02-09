@@ -1,5 +1,5 @@
 import '../audio/audio_controller.dart';
-import 'endless_runner.dart';
+import 'survival_zombie.dart';
 import '../level_selection/levels.dart';
 import '../player_progress/player_progress.dart';
 import 'package:flame/game.dart';

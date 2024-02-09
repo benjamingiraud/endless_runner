@@ -1,8 +1,8 @@
 import 'dart:math';
 
-import 'package:endless_runner/world/components/critical_hitbox.dart';
-import 'package:endless_runner/world/components/player/player.dart';
-import 'package:endless_runner/world/mixins/health.dart';
+import 'package:survival_zombie/world/components/critical_hitbox.dart';
+import 'package:survival_zombie/world/components/player/player.dart';
+import 'package:survival_zombie/world/mixins/health.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';

@@ -1,4 +1,4 @@
-import 'package:endless_runner/world/game_main.dart';
+import 'package:survival_zombie/world/game_main.dart';
 
 import '../audio/audio_controller.dart';
 import 'package:flame/game.dart';

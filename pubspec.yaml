@@ -1,8 +1,8 @@
-name: endless_runner
+name: survival_zombie
 description: A Flame game template built with Flutter.
 
 # Prevent accidental publishing to pub.dev.
-publish_to: 'none'
+publish_to: "none"
 
 version: 0.1.0
 
@@ -37,6 +37,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/
     - assets/images/
     - assets/images/player/
     - assets/images/enemies/

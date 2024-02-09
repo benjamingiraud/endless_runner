@@ -1,5 +1,5 @@
 
-import 'package:endless_runner/world/game_screen.dart';
+import 'package:survival_zombie/world/game_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';

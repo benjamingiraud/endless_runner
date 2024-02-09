@@ -1,10 +1,10 @@
 import 'dart:math';
 
-import 'package:endless_runner/utils/helpers.dart';
-import 'package:endless_runner/world/components/bullet.dart';
-import 'package:endless_runner/world/components/damage_indicator.dart';
-import 'package:endless_runner/world/components/health_bar.dart';
-import 'package:endless_runner/world/components/zombie.dart';
+import 'package:survival_zombie/utils/helpers.dart';
+import 'package:survival_zombie/world/components/bullet.dart';
+import 'package:survival_zombie/world/components/damage_indicator.dart';
+import 'package:survival_zombie/world/components/health_bar.dart';
+import 'package:survival_zombie/world/components/zombie.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';

@@ -1,6 +1,6 @@
 {
-    "name": "endless_runner",
-    "short_name": "endless_runner",
+    "name": "survival_zombie",
+    "short_name": "survival_zombie",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -1,8 +1,9 @@
 import 'dart:math';
 
-import 'package:endless_runner/world/components/bullet.dart';
-import 'package:endless_runner/world/game_main.dart';
-import 'package:endless_runner/world/mixins/health.dart';
+import 'package:survival_zombie/world/components/bullet.dart';
+import 'package:survival_zombie/world/components/critical_hitbox.dart';
+import 'package:survival_zombie/world/game_main.dart';
+import 'package:survival_zombie/world/mixins/health.dart';
 import 'package:flame/cache.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
@@ -192,9 +193,11 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     Set<Vector2> intersectionPoints,
     PositionComponent other,
   ) {
-    super.onCollisionStart(intersectionPoints, other);
-    transform.setFrom(_lastTransform);
-    size.setFrom(_lastSize);
+    if (other is! CriticalHitbox) {
+      super.onCollisionStart(intersectionPoints, other);
+      transform.setFrom(_lastTransform);
+      size.setFrom(_lastSize);
+    }
   }
 
   String getDirection() {

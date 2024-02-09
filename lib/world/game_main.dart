@@ -1,5 +1,5 @@
-import 'package:endless_runner/world/components/player/player.dart';
-import 'package:endless_runner/world/components/zombie.dart';
+import 'package:survival_zombie/world/components/player/player.dart';
+import 'package:survival_zombie/world/components/zombie.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
@@ -46,7 +46,7 @@ class GameMain extends FlameGame
     final knobPaint = BasicPalette.black.withAlpha(150).paint();
     final backgroundPaint = BasicPalette.black.withAlpha(100).paint();
 
-    world.add(ScreenHitbox());
+    // world.add(ScreenHitbox());
 
     joystickMove = JoystickComponent(
       knob: CircleComponent(radius: 15, paint: knobPaint),
@@ -64,10 +64,12 @@ class GameMain extends FlameGame
 
     camera.viewport.add(joystickMove);
     camera.viewport.add(joystickAngle);
+    print(mapComponent.size.x);
+    print(mapComponent.size.y);
     camera.setBounds(
         Rectangle.fromLTWH(0, 0, mapComponent.size.x, mapComponent.size.y),
         considerViewport: false);
-    camera.follow(player, maxSpeed: 200, snap: true);
+    camera.follow(player, maxSpeed: 250, snap: false);
 
     if (kDebugMode) {
       final regular = TextPaint(
