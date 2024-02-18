@@ -77,7 +77,7 @@ class MainMenuScreen extends StatelessWidget {
                     audioController.playSfx(SfxType.buttonTap);
                     GoRouter.of(context).go('/play');
                   },
-                  child: const Text('Play'),
+                  child: const Text('Jouer'),
                 ),
                 _gap,
                 Padding(
@@ -87,6 +87,7 @@ class MainMenuScreen extends StatelessWidget {
                     builder: (context, audioOn, child) {
                       return IconButton(
                         onPressed: () => settingsController.toggleAudioOn(),
+                        color: Colors.white,
                         icon:
                             Icon(audioOn ? Icons.volume_up : Icons.volume_off),
                       );

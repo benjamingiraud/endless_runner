@@ -1,27 +1,16 @@
 List<String> soundTypeToFilename(SfxType type) {
   switch (type) {
-    case SfxType.jump:
-      return const [
-        'jump1.mp3',
-      ];
-    case SfxType.doubleJump:
-      return const [
-        'double_jump1.mp3',
-      ];
     case SfxType.hit:
       return const [
-        'hit1.mp3',
-        'hit2.mp3',
+        'hitmarker.mp3',
       ];
-    case SfxType.damage:
+    case SfxType.playerDamage:
       return const [
-        'damage1.mp3',
-        'damage2.mp3',
+        'male_hurt.mp3',
       ];
-    case SfxType.score:
+    case SfxType.zombieHasTarget:
       return const [
-        'score1.mp3',
-        'score2.mp3',
+        'growling_zombie.mp3',
       ];
     case SfxType.buttonTap:
       return const [
@@ -36,10 +25,8 @@ List<String> soundTypeToFilename(SfxType type) {
 /// Allows control over loudness of different SFX types.
 double soundTypeToVolume(SfxType type) {
   switch (type) {
-    case SfxType.score:
-    case SfxType.jump:
-    case SfxType.doubleJump:
-    case SfxType.damage:
+    case SfxType.playerDamage:
+    case SfxType.zombieHasTarget:
     case SfxType.hit:
       return 0.4;
     case SfxType.buttonTap:
@@ -47,11 +34,4 @@ double soundTypeToVolume(SfxType type) {
   }
 }
 
-enum SfxType {
-  score,
-  jump,
-  doubleJump,
-  hit,
-  damage,
-  buttonTap,
-}
+enum SfxType { hit, buttonTap, playerDamage, zombieHasTarget }

@@ -1,7 +1,10 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+import 'package:survival_zombie/audio/sounds.dart';
 import 'package:survival_zombie/world/components/critical_hitbox.dart';
 import 'package:survival_zombie/world/components/player/player.dart';
+import 'package:survival_zombie/world/game_main.dart';
 import 'package:survival_zombie/world/mixins/health.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
@@ -9,9 +12,19 @@ import 'package:flame/effects.dart';
 import 'package:flutter/animation.dart';
 
 class Zombie extends SpriteAnimationGroupComponent<ZombieState>
-    with HasGameRef, CollisionCallbacks, HasWorldReference<World>, Health {
-  Zombie({super.position, double? currentHealth, double? maxHealth,})
-      : super(anchor: Anchor.center, nativeAngle: pi / 2, scale: Vector2.all(0.75)) {
+    with
+        CollisionCallbacks,
+        HasWorldReference<World>,
+        HasGameReference<GameMain>,
+        Health {
+  Zombie({
+    super.position,
+    double? currentHealth,
+    double? maxHealth,
+  }) : super(
+            anchor: Anchor.center,
+            nativeAngle: pi / 2,
+            scale: Vector2.all(0.75)) {
     initializeHealthMixin(maxHealth ?? 100.0,
         currentHealth: currentHealth ?? Random().nextDouble() * 100 + 50);
   }
@@ -24,10 +37,10 @@ class Zombie extends SpriteAnimationGroupComponent<ZombieState>
   double attackDamage = 20.0;
   bool hasAttacked = false;
 
-  bool hasTarget() => target != null ? true : false;
-  PositionComponent? target;
-  late final SequenceEffect idlePattern;
+  bool hasTarget() => target.value != null;
+  final ValueNotifier<PositionComponent?> target = ValueNotifier(null);
 
+  late final SequenceEffect idlePattern;
   late final CircleHitbox detectionHitbox;
 
   @override
@@ -67,7 +80,7 @@ class Zombie extends SpriteAnimationGroupComponent<ZombieState>
     add(CriticalHitbox(
       1.5,
       size: Vector2(size.x / 3 + size.x / 8, size.y / 6),
-      position: Vector2(size.x / 2, (size.y / 3 + size.y / 9)),
+      position: Vector2(size.x / 3 + size.x / 8, (size.y / 3 + size.y / 9)),
       priority: 2,
     ));
 
@@ -99,6 +112,10 @@ class Zombie extends SpriteAnimationGroupComponent<ZombieState>
       infinite: true,
     );
     add(idlePattern);
+
+    target.addListener(() {
+      game.audioController.playSfx(SfxType.zombieHasTarget);
+    });
   }
 
   @override
@@ -106,13 +123,13 @@ class Zombie extends SpriteAnimationGroupComponent<ZombieState>
     super.update(dt);
     attackTimer?.update(dt);
 
-    if (target != null) {
+    if (hasTarget()) {
       idlePattern.reset();
       idlePattern.pause();
 
-      lookAt(target!.position);
+      lookAt(target.value!.position);
       // Calcule le vecteur de déplacement vers la position du joueur
-      final targetPosition = target!.position;
+      final targetPosition = target.value!.position;
       final direction = targetPosition - position;
 
       // Normalise le vecteur de direction pour obtenir une unité de vecteur de déplacement
@@ -123,18 +140,19 @@ class Zombie extends SpriteAnimationGroupComponent<ZombieState>
       final displacement = unitDirection * speed * dt;
 
       // Réglez la portée d'attaque selon vos besoins
-      final attackRange = target!.scaledSize.x;
+      final attackRange = target.value!.scaledSize.x;
       // Vérifie si le zombie est suffisamment proche du joueur pour l'attaquer
       if (direction.length <= attackRange) {
-        if (target is Health && !hasAttacked) {
+        if (target.value is Health && !hasAttacked) {
           current = ZombieState.attack;
           hasAttacked = true;
           attackTimer =
               Timer(attackInterval - (attackInterval / 7), onTick: () {
-            final attackDamageComputed =
-                (target as Health).shield > 0 ? attackDamage / 2 : attackDamage;
+            final attackDamageComputed = (target.value as Health).shield > 0
+                ? attackDamage / 2
+                : attackDamage;
             final double damageDealt =
-                (target as Health).damage(attackDamageComputed);
+                (target.value as Health).damage(attackDamageComputed);
             heal(damageDealt / 2);
             hasAttacked = false;
           });
@@ -144,13 +162,17 @@ class Zombie extends SpriteAnimationGroupComponent<ZombieState>
         // Déplace le zombie selon le vecteur de déplacement calculé
         hasAttacked = false;
         position += displacement;
+        if (!isColliding) {
+        } else {
+          // position -= displacement;
+        }
         current = ZombieState.run;
         attackTimer?.stop();
         // Sinon le joueur a reussi a semer le zombie
       } else {
         hasAttacked = false;
         current = ZombieState.idle;
-        target = null;
+        target.value = null;
       }
     } else {
       if (attackTimer != null) {
@@ -164,13 +186,13 @@ class Zombie extends SpriteAnimationGroupComponent<ZombieState>
       if (detectionHitbox.isColliding) {
         for (var collision in detectionHitbox.activeCollisions) {
           if (collision.parent is Player) {
-            target = collision.parent as Player;
+            target.value = collision.parent as Player;
           }
           if (collision.parent is Zombie &&
-              (collision.parent as Zombie).target != null) {
+              (collision.parent as Zombie).target.value != null) {
             // timeout de 0.5 pour set la target
             Timer(1.5, onTick: () {
-              target = (collision.parent as Zombie).target;
+              target.value = (collision.parent as Zombie).target.value;
             });
           }
         }

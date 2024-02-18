@@ -1,3 +1,4 @@
+import 'package:survival_zombie/audio/audio_controller.dart';
 import 'package:survival_zombie/world/components/player/player.dart';
 import 'package:survival_zombie/world/components/zombie.dart';
 import 'package:flame/collisions.dart';
@@ -10,6 +11,7 @@ import 'package:flame/palette.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flame_tiled/flame_tiled.dart';
+import 'package:survival_zombie/world/game_screen.dart';
 
 class GameMain extends FlameGame
     with
@@ -18,6 +20,13 @@ class GameMain extends FlameGame
         HasTimeScale,
         ScrollDetector,
         ScaleDetector {
+  GameMain(
+      {required this.audioController,
+      required this.screenWidth,
+      required this.screenHeight});
+
+  late final double screenWidth;
+  late final double screenHeight;
   late final Player player;
   late final JoystickComponent joystickMove;
   late final JoystickComponent joystickAngle;
@@ -27,6 +36,8 @@ class GameMain extends FlameGame
   late final TextComponent animationText;
   late final TextComponent ammoText;
 
+  /// A helper for playing sound effects and background audio.
+  final AudioController audioController;
   late TiledComponent mapComponent;
 
   // TimeManager timeManager = TimeManager();
@@ -46,7 +57,7 @@ class GameMain extends FlameGame
     final knobPaint = BasicPalette.black.withAlpha(150).paint();
     final backgroundPaint = BasicPalette.black.withAlpha(100).paint();
 
-    // world.add(ScreenHitbox());
+    world.add(ScreenHitbox());
 
     joystickMove = JoystickComponent(
       knob: CircleComponent(radius: 15, paint: knobPaint),
@@ -59,17 +70,23 @@ class GameMain extends FlameGame
       margin: const EdgeInsets.only(right: 15, bottom: 15),
     );
 
-    player = Player(joystickMove, joystickAngle, camera);
+    player = Player(joystickMove, joystickAngle, camera,
+        position: Vector2(mapComponent.size.x / 2, mapComponent.size.y / 2));
     world.add(player);
+
+    player.healthNotifier.addListener(() {
+      if (player.healthNotifier.value <= 0) {
+        pauseEngine();
+      }
+    });
 
     camera.viewport.add(joystickMove);
     camera.viewport.add(joystickAngle);
-    print(mapComponent.size.x);
-    print(mapComponent.size.y);
+
     camera.setBounds(
-        Rectangle.fromLTWH(0, 0, mapComponent.size.x, mapComponent.size.y),
-        considerViewport: false);
-    camera.follow(player, maxSpeed: 250, snap: false);
+        Rectangle.fromLTWH(screenWidth / 2, screenHeight / 2, mapComponent.size.x, mapComponent.size.y),
+        considerViewport: true);
+    camera.follow(player, maxSpeed: 500, snap: false);
 
     if (kDebugMode) {
       final regular = TextPaint(
@@ -94,39 +111,20 @@ class GameMain extends FlameGame
 
       final speedWithMargin = HudMarginComponent(
         margin: const EdgeInsets.only(
-          top: 15,
+          top: 15 + 30,
           left: 15,
         ),
       )..add(speedText);
 
-      final directionWithMargin = HudMarginComponent(
-        margin: const EdgeInsets.only(
-          top: 30,
-          left: 15,
-        ),
-      )..add(directionText);
-
-      final animationWithMargin = HudMarginComponent(
-        margin: const EdgeInsets.only(
-          top: 45,
-          left: 15,
-        ),
-      )..add(animationText);
-
       final ammoWithMargin = HudMarginComponent(
         margin: const EdgeInsets.only(
-          top: 60,
+          top: 60 + 30,
           left: 15,
         ),
       )..add(ammoText);
 
-      add(FpsTextComponent(position: Vector2(15, 0), textRenderer: regular));
-      camera.viewport.addAll([
-        speedWithMargin,
-        directionWithMargin,
-        animationWithMargin,
-        ammoWithMargin
-      ]);
+      add(FpsTextComponent(position: Vector2(15, 60), textRenderer: regular));
+      camera.viewport.addAll([speedWithMargin, ammoWithMargin]);
     }
 
     // world.add(
@@ -144,9 +142,9 @@ class GameMain extends FlameGame
     // );
 
     world.add(Zombie(
-        position: Vector2(200, 200), currentHealth: 100, maxHealth: 100));
+        position: Vector2(mapComponent.size.x / 2 + 200, mapComponent.size.y / 2 + 200), currentHealth: 100, maxHealth: 100));
     world.add(Zombie(
-        position: Vector2(400, 200), currentHealth: 100, maxHealth: 100));
+        position: Vector2(mapComponent.size.x / 2 + 400, mapComponent.size.y / 2 + 200), currentHealth: 100, maxHealth: 100));
     // world.add(Zombie(
     //     position: Vector2(200, 400), currentHealth: 100, maxHealth: 100));
   }
@@ -166,9 +164,22 @@ class GameMain extends FlameGame
         'Munitions : ${(player.magazineAmmo.value)}/${(player.totalAmmo.value)}';
   }
 
+  @override
+  void onMount() {
+    super.onMount();
+    // When the world is mounted in the game we add a back button widget as an
+    // overlay so that the player can go back to the previous screen.
+    overlays.add(GameScreen.backButtonKey);
+  }
+
+  @override
+  void onRemove() {
+    overlays.remove(GameScreen.backButtonKey);
+  }
+
   // Camera zoom
   void clampZoom() {
-    camera.viewfinder.zoom = camera.viewfinder.zoom.clamp(0.5, 2.0);
+    camera.viewfinder.zoom = camera.viewfinder.zoom.clamp(1.0, 2.0);
   }
 
   static const zoomPerScrollUnit = 0.1;
@@ -183,7 +194,7 @@ class GameMain extends FlameGame
   late double startZoom;
 
   @override
-  void onScaleStart(_) {
+  void onScaleStart(ScaleStartInfo info) {
     startZoom = camera.viewfinder.zoom;
   }
 

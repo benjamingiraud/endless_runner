@@ -1,10 +1,13 @@
+import 'package:survival_zombie/audio/sounds.dart';
 import 'package:survival_zombie/world/components/critical_hitbox.dart';
+import 'package:survival_zombie/world/game_main.dart';
 import 'package:survival_zombie/world/mixins/health.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/image_composition.dart';
 
-class Bullet extends SpriteComponent with CollisionCallbacks {
+class Bullet extends SpriteComponent
+    with CollisionCallbacks, HasGameReference<GameMain> {
   final Vector2 speed;
   @override
   final double angle;
@@ -59,6 +62,7 @@ class Bullet extends SpriteComponent with CollisionCallbacks {
     }
 
     if (otherComponent is Health) {
+      game.audioController.playSfx(SfxType.hit);
       otherComponent.damage(finalDamage,
           damager: this,
           isCritical: isCritical,

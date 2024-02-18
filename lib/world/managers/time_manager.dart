@@ -1,5 +1,3 @@
-import 'package:flame/flame.dart';
-
 class TimeManager {
   double _currentTime = 0.0;
   double _elapsedTime = 0.0;

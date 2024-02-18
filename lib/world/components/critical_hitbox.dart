@@ -6,7 +6,9 @@ class CriticalHitbox extends RectangleComponent {
   final double critacalMultiplier;
   CriticalHitbox(this.critacalMultiplier,
       {super.position, super.size, super.priority}) {
-    add(RectangleHitbox());
+    add(RectangleHitbox(
+      collisionType: CollisionType.passive
+    ));
   }
   // Substituez la méthode render pour ne rien dessiner
   @override

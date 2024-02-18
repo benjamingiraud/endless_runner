@@ -9,7 +9,6 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class Player extends SpriteAnimationGroupComponent<PlayerState>
@@ -40,7 +39,7 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   final CameraComponent camera;
   final images = Images();
 
-  Player(this.joystickMove, this.joystickAngle, this.camera)
+  Player(this.joystickMove, this.joystickAngle, this.camera, {super.position})
       : super(
             anchor: Anchor.center,
             nativeAngle: pi / 2,

@@ -1,10 +1,10 @@
+import 'package:provider/provider.dart';
 import 'package:survival_zombie/world/game_main.dart';
 
 import '../audio/audio_controller.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nes_ui/nes_ui.dart';
 
 /// This widget defines the properties of the game screen.
 ///
@@ -19,19 +19,24 @@ class GameScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final audioController = context.read<AudioController>();
+    final Size screenSize = MediaQuery.of(context).size;
+    final double screenWidth = screenSize.width;
+    final double screenHeight = screenSize.height;
+
     return Scaffold(
       body: GameWidget<GameMain>(
         key: const Key('play session'),
-        game: GameMain(),
+        game: GameMain(audioController: audioController, screenWidth: screenWidth, screenHeight: screenHeight),
         overlayBuilderMap: {
           backButtonKey: (BuildContext context, GameMain game) {
             return Positioned(
-              top: 20,
-              right: 10,
-              child: NesButton(
-                type: NesButtonType.normal,
+              top: 10,
+              left: 10,
+              child: IconButton.filled(
+                icon: const Icon(Icons.menu),
+                color: Colors.white,
                 onPressed: GoRouter.of(context).pop,
-                child: NesIcon(iconData: NesIcons.leftArrowIndicator),
               ),
             );
           },

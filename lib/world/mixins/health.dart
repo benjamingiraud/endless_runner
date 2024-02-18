@@ -1,11 +1,9 @@
 import 'dart:math';
 
-import 'package:survival_zombie/utils/helpers.dart';
 import 'package:survival_zombie/world/components/bullet.dart';
 import 'package:survival_zombie/world/components/damage_indicator.dart';
 import 'package:survival_zombie/world/components/health_bar.dart';
 import 'package:survival_zombie/world/components/zombie.dart';
-import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/palette.dart';
@@ -95,13 +93,13 @@ mixin Health on Component {
       }
       if (this is HasPaint) {
         final effect = ColorEffect(
-          Colors.red,
+          const Color.fromARGB(255, 95, 24, 19),
           EffectController(
-            duration: 0.5,
+            duration: 0.25,
             alternate: true,
           ),
           opacityFrom: 0,
-          opacityTo: 0.32,
+          opacityTo: 0.75,
         );
         add(effect);
       }
@@ -116,6 +114,7 @@ mixin Health on Component {
         _health.value = (_health.value - amount).clamp(0.0, _maxHealth);
       }
     }
+
     if (this is Zombie) {
       if (damager is Bullet) {
         add(
@@ -139,21 +138,26 @@ mixin Health on Component {
         );
 
         // check if the zombie is not already rotating and then rotate it
-        bool shouldRotate = true;
-        for (var child in children) {
-          if (child is RotateEffect) {
-            shouldRotate = false;
+        if (!(this as Zombie).hasTarget()) {
+          bool shouldRotate = true;
+          for (var child in children) {
+            if (child is RotateEffect) {
+              shouldRotate = false;
+            }
           }
-        }
-        if (shouldRotate) {
-          add(
-            RotateEffect.by(
-              (this as PositionComponent)
-                  .angleTo(damager.player.absolutePosition),
-              LinearEffectController(0.25),
-              onComplete: () => {(this as Zombie).target = damager.player},
-            ),
-          );
+          if (shouldRotate) {
+            add(
+              RotateEffect.by(
+                (this as PositionComponent)
+                    .angleTo(damager.player.absolutePosition),
+                LinearEffectController(0.25),
+                onComplete: () {
+                  (this as Zombie).target.value = damager.player;
+                  // listener in zombie to play the sound
+                },
+              ),
+            );
+          }
         }
       }
     }
