@@ -1,8 +1,13 @@
 import 'dart:math';
+import 'dart:ui';
 
+import 'package:flame/palette.dart';
+import 'package:flame/particles.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:survival_zombie/audio/sounds.dart';
 import 'package:survival_zombie/world/components/critical_hitbox.dart';
+import 'package:survival_zombie/world/components/health_bar.dart';
 import 'package:survival_zombie/world/components/player/player.dart';
 import 'package:survival_zombie/world/game_main.dart';
 import 'package:survival_zombie/world/mixins/health.dart';
@@ -191,13 +196,43 @@ class Zombie extends SpriteAnimationGroupComponent<ZombieState>
           if (collision.parent is Zombie &&
               (collision.parent as Zombie).target.value != null) {
             // timeout de 0.5 pour set la target
-            Timer(1.5, onTick: () {
+            Timer(1.0, onTick: () {
               target.value = (collision.parent as Zombie).target.value;
             });
           }
         }
       }
     }
+
+    for (final child in children) {
+      if (child is HealthBar) {
+        // child.transform.angle = 0;
+        // child.angle = 0;
+      }
+    }
+  }
+
+  void explode() {
+    final particleComponent = ParticleSystemComponent(
+      particle: Particle.generate(
+        count: 250,
+        lifespan: 1.25,
+        generator: (i) => AcceleratedParticle(
+          acceleration: Vector2(0, 100),
+          speed: Vector2(Random().nextDouble() * 100 - 50,
+              Random().nextDouble() * 100 - 50),
+          child: CircleParticle(
+            radius: Random().nextDouble() * 2 + 1, // rayon de la particule
+            paint: const PaletteEntry(Color.fromARGB(255, 156, 41, 33)).paint(),
+          ),
+        ),
+      ),
+      anchor: Anchor.center,
+      position: (this as PositionComponent).absolutePosition,
+    );
+
+    // Ajoutez le composant de particule à votre jeu
+    world.add(particleComponent);
   }
 }
 

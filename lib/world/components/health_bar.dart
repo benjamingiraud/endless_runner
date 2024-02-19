@@ -17,14 +17,21 @@ class HealthBar extends PositionComponent {
 
   final bool centered;
 
+  Timer? _lostHealthTimer;
+
   HealthBar(
       this.maxHealth, this.currentHealth, this.maxShield, this.currentShield,
       {required this.showText,
       required this.width,
       required this.height,
-      required this.centered});
+      required this.centered}) {
+    previousHealth = currentHealth;
+  }
 
   void updateHealth(double newHealth) {
+    _lostHealthTimer = Timer(1.0, onTick: () {
+      previousHealth = currentHealth;
+    });
     currentHealth = newHealth;
   }
 
@@ -33,17 +40,21 @@ class HealthBar extends PositionComponent {
   }
 
   @override
+  void update(double dt) {
+    _lostHealthTimer?.update(dt);
+  }
+
+  @override
   void render(Canvas canvas) {
     renderHealthBar(canvas);
     renderShieldBar(canvas);
-    previousHealth = currentHealth;
-    previousShield = currentShield;
   }
+
+  final barRadius = const Radius.circular(0.0);
 
   void renderHealthBar(Canvas canvas) {
     final double percentage = currentHealth / maxHealth;
     final double barWidth = width * percentage;
-    const barRadius = Radius.circular(10.0);
 
     final barPosition = getBarPosition(centered);
 
@@ -52,7 +63,13 @@ class HealthBar extends PositionComponent {
     }
 
     renderBackgroundBar(
-        canvas, barPosition, width, height, barRadius, Colors.grey);
+      canvas,
+      barPosition,
+      width,
+      height,
+      barRadius,
+      Colors.black12,
+    );
     renderBorder(canvas, barPosition, width, height, barRadius);
 
     renderFilledBar(
@@ -70,7 +87,9 @@ class HealthBar extends PositionComponent {
   }
 
   void renderLostHealthBar(Canvas canvas, Offset barPosition) {
-    final lostHealthWidth = (previousHealth / maxHealth) * width;
+    final lostHealthWidth =
+        (previousHealth / maxHealth) * width * (1 - _lostHealthTimer!.progress);
+    const barRadius = Radius.circular(0.0);
 
     final lostHealthRect = RRect.fromRectAndRadius(
       Rect.fromLTWH(
@@ -79,9 +98,9 @@ class HealthBar extends PositionComponent {
         lostHealthWidth,
         height,
       ),
-      const Radius.circular(10.0),
+      barRadius,
     );
-    final paint = Paint()..color = Colors.red;
+    final paint = Paint()..color = Color.fromARGB(148, 156, 41, 33);
     canvas.drawRRect(lostHealthRect, paint);
   }
 
@@ -89,7 +108,6 @@ class HealthBar extends PositionComponent {
     if (maxShield > 0) {
       final shieldPercentage = currentShield / maxShield;
       final shieldBarWidth = width * shieldPercentage;
-      const shieldBarRadius = Radius.circular(10.0);
       final shieldBarHeight = height - (height / 3);
       final shieldBarPosition =
           getBarPosition(centered, yOffset: -shieldBarHeight);
@@ -99,17 +117,17 @@ class HealthBar extends PositionComponent {
         shieldBarPosition,
         width,
         shieldBarHeight,
-        shieldBarRadius,
-        Colors.grey,
+        barRadius,
+        Colors.black12,
       );
       renderBorder(
-          canvas, shieldBarPosition, width, shieldBarHeight, shieldBarRadius);
+          canvas, shieldBarPosition, width, shieldBarHeight, barRadius);
       renderFilledBar(
         canvas,
         shieldBarPosition,
         shieldBarWidth,
         shieldBarHeight,
-        shieldBarRadius,
+        barRadius,
         [
           const Color.fromARGB(255, 102, 122, 187),
           const Color.fromARGB(255, 76, 83, 175)
@@ -210,8 +228,9 @@ class HealthBar extends PositionComponent {
   }
 
   Offset getBarPosition(bool centered, {double yOffset = 0}) {
-    final x =
-        centered ? (parent as PositionComponent).scaledSize.x / 2 - width / 2 : 0.0;
+    final x = centered
+        ? (parent as PositionComponent).scaledSize.x / 2 - width / 2
+        : 0.0;
     return Offset(x, yOffset);
   }
 }

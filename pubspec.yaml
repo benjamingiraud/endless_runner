@@ -53,6 +53,12 @@ flutter:
     - family: Babas Neue
       fonts:
         - asset: assets/fonts/Bebas_Neue/BebasNeue-Regular.ttf
+    - family: K1
+      fonts:
+        - asset: assets/fonts/K1/ka1.ttf
+    - family: Alphabetica
+      fonts:
+        - asset: assets/fonts/Alphabetica/alphbeta.ttf
 
 flutter_launcher_icons:
   android: true

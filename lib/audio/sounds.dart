@@ -4,6 +4,10 @@ List<String> soundTypeToFilename(SfxType type) {
       return const [
         'hitmarker.mp3',
       ];
+    case SfxType.critialHit:
+      return const [
+        'hitmarker.mp3',
+      ];
     case SfxType.playerDamage:
       return const [
         'male_hurt.mp3',
@@ -26,12 +30,14 @@ List<String> soundTypeToFilename(SfxType type) {
 double soundTypeToVolume(SfxType type) {
   switch (type) {
     case SfxType.playerDamage:
-    case SfxType.zombieHasTarget:
     case SfxType.hit:
       return 0.4;
+    case SfxType.critialHit:
+    case SfxType.zombieHasTarget:
+      return 0.6;
     case SfxType.buttonTap:
       return 1.0;
   }
 }
 
-enum SfxType { hit, buttonTap, playerDamage, zombieHasTarget }
+enum SfxType { hit, critialHit, buttonTap, playerDamage, zombieHasTarget }

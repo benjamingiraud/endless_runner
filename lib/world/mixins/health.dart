@@ -1,14 +1,17 @@
 import 'dart:math';
 
+import 'package:survival_zombie/audio/sounds.dart';
 import 'package:survival_zombie/world/components/bullet.dart';
 import 'package:survival_zombie/world/components/damage_indicator.dart';
 import 'package:survival_zombie/world/components/health_bar.dart';
+import 'package:survival_zombie/world/components/player/player.dart';
 import 'package:survival_zombie/world/components/zombie.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/palette.dart';
 import 'package:flame/particles.dart';
 import 'package:flutter/material.dart';
+import 'package:survival_zombie/world/game_main.dart';
 
 mixin Health on Component {
   late double _maxHealth;
@@ -17,6 +20,7 @@ mixin Health on Component {
   late ValueNotifier<double> _shield;
 
   late HealthBar healthBar;
+  late final GameMain _gameRef = findGame() as GameMain;
 
   initializeHealthMixin(double maxHealth,
       {double? currentHealth,
@@ -35,16 +39,24 @@ mixin Health on Component {
     _health.addListener(() {
       healthBar.updateHealth(_health.value);
       if (_health.value <= 0) {
-        removeFromParent();
         // for (var child in children) {
         //   child.removeFromParent();
         // }
         // add(RemoveEffect(delay: 1.0));
         if (this is Zombie) {
+          add(ScaleEffect.to(Vector2(0, 0),
+              EffectController(duration: 0.5, curve: Curves.easeOutSine),
+              onComplete: removeFromParent));
+          (this as Zombie).explode();
           if ((this as Zombie).hasTarget()) {
             // ((this as Zombie).target as Player).game.timeScale = 0.25;
           }
+        } else {
+          removeFromParent();
         }
+      }
+      if (this is Player) {
+        _gameRef.audioController.playSfx(SfxType.playerDamage);
       }
     });
 
@@ -52,9 +64,6 @@ mixin Health on Component {
       healthBar.updateShield(_shield.value);
       if (_shield.value <= 0) {
         // crack shield sound ??
-        if (this is Zombie) {
-          if ((this as Zombie).hasTarget()) {}
-        }
       }
     });
 
@@ -62,7 +71,8 @@ mixin Health on Component {
         showText: showText,
         width: barWidth,
         height: barHeight,
-        centered: barCentered);
+        centered: barCentered)
+      ..debugMode = true;
 
     if (shouldRender) {
       add(healthBar);
@@ -93,20 +103,24 @@ mixin Health on Component {
       }
       if (this is HasPaint) {
         final effect = ColorEffect(
-          const Color.fromARGB(255, 95, 24, 19),
+          const Color.fromARGB(255, 156, 41, 33),
           EffectController(
-            duration: 0.25,
+            duration: 0.5,
             alternate: true,
           ),
           opacityFrom: 0,
-          opacityTo: 0.75,
+          opacityTo: 0.5,
         );
         add(effect);
       }
-      findGame()!.world.add(DamageIndicator(
-          "-${amount.toStringAsFixed(0)}", -amount,
-          isCritical: isCritical,
-          position: (this as PositionComponent).position));
+
+      _gameRef.world.add(DamageIndicator(
+        "-${amount.toStringAsFixed(0)}",
+        -amount,
+        isCritical: isCritical,
+        position: (this as PositionComponent).position,
+        isPlayer: this is Player ? true : false,
+      ));
 
       if (_shield.value > 0) {
         _shield.value = (_shield.value - amount).clamp(0.0, _maxShield);
@@ -120,15 +134,16 @@ mixin Health on Component {
         add(
           ParticleSystemComponent(
             particle: Particle.generate(
-              count: 60,
-              lifespan: 1,
+              count: 120,
+              lifespan: 1.25,
               generator: (i) => AcceleratedParticle(
                 acceleration: Vector2(0, 100),
                 speed: Vector2(Random().nextDouble() * 100 - 50,
                     Random().nextDouble() * 100 - 50),
                 child: CircleParticle(
                   radius: 1,
-                  paint: BasicPalette.red.paint(),
+                  paint: const PaletteEntry(Color.fromARGB(255, 156, 41, 33))
+                      .paint(),
                 ),
               ),
             ),
@@ -153,7 +168,6 @@ mixin Health on Component {
                 LinearEffectController(0.25),
                 onComplete: () {
                   (this as Zombie).target.value = damager.player;
-                  // listener in zombie to play the sound
                 },
               ),
             );
@@ -164,8 +178,6 @@ mixin Health on Component {
 
     return amount;
   }
-
-  // addShield
 
   void heal(double amount) {
     if (amount > 0) {

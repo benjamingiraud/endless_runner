@@ -62,7 +62,7 @@ class Bullet extends SpriteComponent
     }
 
     if (otherComponent is Health) {
-      game.audioController.playSfx(SfxType.hit);
+      isCritical ? game.audioController.playSfx(SfxType.critialHit) : game.audioController.playSfx(SfxType.hit);
       otherComponent.damage(finalDamage,
           damager: this,
           isCritical: isCritical,
