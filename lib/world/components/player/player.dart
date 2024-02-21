@@ -6,7 +6,6 @@ import 'package:survival_zombie/world/components/bullet.dart';
 import 'package:survival_zombie/world/components/critical_hitbox.dart';
 import 'package:survival_zombie/world/game_main.dart';
 import 'package:survival_zombie/world/mixins/health.dart';
-import 'package:flame/cache.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';

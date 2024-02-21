@@ -72,6 +72,7 @@ class GameMain extends FlameGame
 
     await images.load('player/bullet.png');
     await images.load('effects/muzzle1.png');
+    await images.load('effects/blood.png');
     player = Player(joystickMove, joystickAngle, camera,
         position: Vector2(mapComponent.size.x / 2, mapComponent.size.y / 2));
     world.add(player);

@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flame/sprite.dart';
 import 'package:survival_zombie/audio/sounds.dart';
 import 'package:survival_zombie/world/components/bullet.dart';
 import 'package:survival_zombie/world/components/damage_indicator.dart';
@@ -40,11 +41,7 @@ mixin Health on Component {
       healthBar.updateHealth(_health.value);
       if (_health.value <= 0) {
         if (this is Zombie) {
-          // add(ScaleEffect.to(Vector2(0, 0),
-          //     EffectController(duration: 0.5, curve: Curves.easeOutSine),
-          //     onComplete: removeFromParent));
           (this as Zombie).explode();
-          removeFromParent();
         }
       }
       if (this is Player) {
@@ -119,7 +116,28 @@ mixin Health on Component {
         _health.value = (_health.value - amount).clamp(0.0, _maxHealth);
       }
     }
-
+    if (this is Player) {
+      add(
+        ParticleSystemComponent(
+          particle: Particle.generate(
+            count: 120,
+            lifespan: 1.25,
+            generator: (i) => AcceleratedParticle(
+              acceleration: Vector2(0, 100),
+              speed: Vector2(Random().nextDouble() * 100 - 50,
+                  Random().nextDouble() * 100 - 50),
+              child: CircleParticle(
+                radius: 1,
+                paint: const PaletteEntry(Color.fromARGB(255, 156, 41, 33))
+                    .paint(),
+              ),
+            ),
+          ),
+          anchor: Anchor.center,
+          position: (this as PositionComponent).scaledSize / 2,
+        ),
+      );
+    }
     if (this is Zombie) {
       if (damager is Bullet) {
         add(
@@ -142,6 +160,19 @@ mixin Health on Component {
             position: (this as PositionComponent).scaledSize / 2,
           ),
         );
+
+        final bloodSpriteImg = _gameRef.images.fromCache('effects/blood.png');
+        final bloodSpriteSheet = SpriteSheet(
+          image: bloodSpriteImg,
+          srcSize: Vector2(110, 93),
+        );
+
+        final bloodAnimation = bloodSpriteSheet.createAnimation(
+            row: Random().nextInt(9), stepTime: 0.1, to: 5, loop: false);
+        add(SpriteAnimationComponent(
+            animation: bloodAnimation,
+            removeOnFinish: true,
+            position: Vector2(50, 0)));
 
         // check if the zombie is not already rotating and then rotate it
         if (!(this as Zombie).hasTarget()) {

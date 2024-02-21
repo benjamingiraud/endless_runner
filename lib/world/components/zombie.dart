@@ -216,76 +216,73 @@ class Zombie extends SpriteAnimationGroupComponent<ZombieState>
   }
 
   void split() {
-    final arm1Img = game.images.fromCache('enemies/zombie_dead_arm1.png');
-    final arm2Img = game.images.fromCache('enemies/zombie_dead_arm2.png');
-    final headImg = game.images.fromCache('enemies/zombie_dead_head.png');
-    final bodyImg = game.images.fromCache('enemies/zombie_dead_body.png');
+    final imagesAnimations = {
+      'body': game.images.fromCache('enemies/zombie_dead_body.png'),
+      'arm1': game.images.fromCache('enemies/zombie_dead_arm1.png'),
+      'arm2': game.images.fromCache('enemies/zombie_dead_arm2.png'),
+      'head': game.images.fromCache('enemies/zombie_dead_head.png'),
+    };
 
-    final body = SpriteComponent(
-        sprite: Sprite(bodyImg, srcSize: Vector2(61, 94)),
+    final positions = {
+      'body': absolutePosition,
+      'arm1': Vector2(58, 7),
+      'arm2': Vector2(65, 74),
+      'head': Vector2(30, 50),
+    };
+
+    final sizes = {
+      'body': Vector2(61, 94),
+      'arm1': Vector2(52, 23),
+      'arm2': Vector2(47, 34),
+      'head': Vector2(43, 30),
+    };
+
+    final moveEffects = {
+      'arm1': Vector2(-40, -40),
+      'arm2': Vector2(-40, 40),
+      'head': Vector2(-60, 0),
+    };
+
+    SpriteComponent createComponent(String name) {
+      final component = SpriteComponent(
+        sprite: Sprite(imagesAnimations[name]!, srcSize: sizes[name]),
         anchor: Anchor.center,
-        position: absolutePosition,
+        position: positions[name],
         angle: absoluteAngle,
         scale: scale,
-        priority: 0);
-    final arm1 = SpriteComponent(
-        sprite: Sprite(arm1Img, srcSize: Vector2(52, 23)),
-        anchor: Anchor.center,
-        position: Vector2(58, 7),
-        priority: 0);
-    final arm2 = SpriteComponent(
-        sprite: Sprite(arm2Img, srcSize: Vector2(47, 34)),
-        anchor: Anchor.center,
-        position: Vector2(65, 74),
-        priority: 0);
-    final head = SpriteComponent(
-        sprite: Sprite(headImg, srcSize: Vector2(43, 30)),
-        anchor: Anchor.center,
-        position: Vector2(30, 50),
-        priority: 0);
-    body.addAll([
-      arm1,
-      arm2,
-      head,
-    ]);
-    world.addAll([
-      body,
-    ]);
-    arm1.addAll([
-      MoveByEffect(
-        Vector2(-40, -40),
-        EffectController(duration: 0.25),
-      ),
-      RotateEffect.by(
-        20,
-        EffectController(duration: 0.25),
-      )
-    ]);
-    head.addAll([
-      MoveByEffect(
-        Vector2(-60, 0),
-        EffectController(duration: 0.25),
-      ),
-      RotateEffect.by(
-        20,
-        EffectController(duration: 0.25),
-      )
-    ]);
-    arm2.addAll([
-      MoveByEffect(
-        Vector2(-40, 40),
-        EffectController(duration: 0.25),
-      ),
-      RotateEffect.by(
-        20,
-        EffectController(duration: 0.25),
-      )
-    ]);
+        priority: 0,
+      );
 
-    body.add(OpacityEffect.fadeOut(EffectController(duration: 1, startDelay: 4),
-        onComplete: () {
-      body.removeFromParent();
-    }));
+      if (moveEffects.containsKey(name)) {
+        component.addAll([
+          MoveByEffect(
+            moveEffects[name]!,
+            EffectController(duration: 0.25),
+          ),
+          RotateEffect.by(
+            20,
+            EffectController(duration: 0.25),
+          )
+        ]);
+      }
+
+      if (name == 'body') {
+        component.add(OpacityEffect.fadeOut(
+            EffectController(duration: 1, startDelay: 4), onComplete: () {
+          component.removeFromParent();
+        }));
+      }
+
+      return component;
+    }
+
+    final body = createComponent('body');
+    final arm1 = createComponent('arm1');
+    final arm2 = createComponent('arm2');
+    final head = createComponent('head');
+
+    body.addAll([arm1, arm2, head]);
+    world.add(body);
   }
 
   void explode() {
@@ -307,7 +304,7 @@ class Zombie extends SpriteAnimationGroupComponent<ZombieState>
       position: absolutePosition,
     );
     split();
-    // Ajoutez le composant de particule à votre jeu
+    removeFromParent();
     world.add(particleComponent);
   }
 }
