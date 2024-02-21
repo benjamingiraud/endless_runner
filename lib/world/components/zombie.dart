@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:flame/cache.dart';
+import 'package:flame/geometry.dart';
 import 'package:flame/palette.dart';
 import 'package:flame/particles.dart';
 import 'package:flutter/foundation.dart';
@@ -29,6 +31,7 @@ class Zombie extends SpriteAnimationGroupComponent<ZombieState>
   }) : super(
             anchor: Anchor.center,
             nativeAngle: pi / 2,
+            priority: 1,
             scale: Vector2.all(0.75)) {
     initializeHealthMixin(maxHealth ?? 100.0,
         currentHealth: currentHealth ?? Random().nextDouble() * 100 + 50);
@@ -212,13 +215,86 @@ class Zombie extends SpriteAnimationGroupComponent<ZombieState>
     }
   }
 
+  void split() {
+    final arm1Img = game.images.fromCache('enemies/zombie_dead_arm1.png');
+    final arm2Img = game.images.fromCache('enemies/zombie_dead_arm2.png');
+    final headImg = game.images.fromCache('enemies/zombie_dead_head.png');
+    final bodyImg = game.images.fromCache('enemies/zombie_dead_body.png');
+
+    final body = SpriteComponent(
+        sprite: Sprite(bodyImg, srcSize: Vector2(61, 94)),
+        anchor: Anchor.center,
+        position: absolutePosition,
+        angle: absoluteAngle,
+        scale: scale,
+        priority: 0);
+    final arm1 = SpriteComponent(
+        sprite: Sprite(arm1Img, srcSize: Vector2(52, 23)),
+        anchor: Anchor.center,
+        position: Vector2(58, 7),
+        priority: 0);
+    final arm2 = SpriteComponent(
+        sprite: Sprite(arm2Img, srcSize: Vector2(47, 34)),
+        anchor: Anchor.center,
+        position: Vector2(65, 74),
+        priority: 0);
+    final head = SpriteComponent(
+        sprite: Sprite(headImg, srcSize: Vector2(43, 30)),
+        anchor: Anchor.center,
+        position: Vector2(30, 50),
+        priority: 0);
+    body.addAll([
+      arm1,
+      arm2,
+      head,
+    ]);
+    world.addAll([
+      body,
+    ]);
+    arm1.addAll([
+      MoveByEffect(
+        Vector2(-40, -40),
+        EffectController(duration: 0.25),
+      ),
+      RotateEffect.by(
+        20,
+        EffectController(duration: 0.25),
+      )
+    ]);
+    head.addAll([
+      MoveByEffect(
+        Vector2(-60, 0),
+        EffectController(duration: 0.25),
+      ),
+      RotateEffect.by(
+        20,
+        EffectController(duration: 0.25),
+      )
+    ]);
+    arm2.addAll([
+      MoveByEffect(
+        Vector2(-40, 40),
+        EffectController(duration: 0.25),
+      ),
+      RotateEffect.by(
+        20,
+        EffectController(duration: 0.25),
+      )
+    ]);
+
+    body.add(OpacityEffect.fadeOut(EffectController(duration: 1, startDelay: 4),
+        onComplete: () {
+      body.removeFromParent();
+    }));
+  }
+
   void explode() {
     final particleComponent = ParticleSystemComponent(
       particle: Particle.generate(
-        count: 250,
-        lifespan: 1.25,
+        count: 200,
+        lifespan: 1,
         generator: (i) => AcceleratedParticle(
-          acceleration: Vector2(0, 100),
+          acceleration: Vector2(0, Random().nextDouble() * 100 - 50),
           speed: Vector2(Random().nextDouble() * 100 - 50,
               Random().nextDouble() * 100 - 50),
           child: CircleParticle(
@@ -228,9 +304,9 @@ class Zombie extends SpriteAnimationGroupComponent<ZombieState>
         ),
       ),
       anchor: Anchor.center,
-      position: (this as PositionComponent).absolutePosition,
+      position: absolutePosition,
     );
-
+    split();
     // Ajoutez le composant de particule à votre jeu
     world.add(particleComponent);
   }

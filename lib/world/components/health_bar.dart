@@ -100,7 +100,7 @@ class HealthBar extends PositionComponent {
       ),
       barRadius,
     );
-    final paint = Paint()..color = Color.fromARGB(148, 156, 41, 33);
+    final paint = Paint()..color = const Color.fromARGB(148, 156, 41, 33);
     canvas.drawRRect(lostHealthRect, paint);
   }
 

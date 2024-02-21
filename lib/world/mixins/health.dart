@@ -39,19 +39,11 @@ mixin Health on Component {
     _health.addListener(() {
       healthBar.updateHealth(_health.value);
       if (_health.value <= 0) {
-        // for (var child in children) {
-        //   child.removeFromParent();
-        // }
-        // add(RemoveEffect(delay: 1.0));
         if (this is Zombie) {
-          add(ScaleEffect.to(Vector2(0, 0),
-              EffectController(duration: 0.5, curve: Curves.easeOutSine),
-              onComplete: removeFromParent));
+          // add(ScaleEffect.to(Vector2(0, 0),
+          //     EffectController(duration: 0.5, curve: Curves.easeOutSine),
+          //     onComplete: removeFromParent));
           (this as Zombie).explode();
-          if ((this as Zombie).hasTarget()) {
-            // ((this as Zombie).target as Player).game.timeScale = 0.25;
-          }
-        } else {
           removeFromParent();
         }
       }
@@ -71,8 +63,7 @@ mixin Health on Component {
         showText: showText,
         width: barWidth,
         height: barHeight,
-        centered: barCentered)
-      ..debugMode = true;
+        centered: barCentered);
 
     if (shouldRender) {
       add(healthBar);

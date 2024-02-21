@@ -70,6 +70,8 @@ class GameMain extends FlameGame
       margin: const EdgeInsets.only(right: 15, bottom: 15),
     );
 
+    await images.load('player/bullet.png');
+    await images.load('effects/muzzle1.png');
     player = Player(joystickMove, joystickAngle, camera,
         position: Vector2(mapComponent.size.x / 2, mapComponent.size.y / 2));
     world.add(player);
@@ -84,7 +86,8 @@ class GameMain extends FlameGame
     camera.viewport.add(joystickAngle);
 
     camera.setBounds(
-        Rectangle.fromLTWH(screenWidth / 2, screenHeight / 2, mapComponent.size.x, mapComponent.size.y),
+        Rectangle.fromLTWH(screenWidth / 2, screenHeight / 2,
+            mapComponent.size.x, mapComponent.size.y),
         considerViewport: true);
     camera.follow(player, maxSpeed: 500, snap: false);
 
@@ -140,11 +143,21 @@ class GameMain extends FlameGame
     //     // selfPositioning: true,
     //   ),
     // );
+    await images.load('enemies/zombie_dead_arm1.png');
+    await images.load('enemies/zombie_dead_arm2.png');
+    await images.load('enemies/zombie_dead_body.png');
+    await images.load('enemies/zombie_dead_head.png');
 
     world.add(Zombie(
-        position: Vector2(mapComponent.size.x / 2 + 200, mapComponent.size.y / 2 + 200), currentHealth: 100, maxHealth: 100));
+        position: Vector2(
+            mapComponent.size.x / 2 + 200, mapComponent.size.y / 2 + 200),
+        currentHealth: 100,
+        maxHealth: 100));
     world.add(Zombie(
-        position: Vector2(mapComponent.size.x / 2 + 400, mapComponent.size.y / 2 + 200), currentHealth: 100, maxHealth: 100));
+        position: Vector2(
+            mapComponent.size.x / 2 + 400, mapComponent.size.y / 2 + 200),
+        currentHealth: 100,
+        maxHealth: 100));
     // world.add(Zombie(
     //     position: Vector2(200, 400), currentHealth: 100, maxHealth: 100));
   }

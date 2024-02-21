@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:flame/effects.dart';
+import 'package:survival_zombie/audio/sounds.dart';
 import 'package:survival_zombie/world/components/bullet.dart';
 import 'package:survival_zombie/world/components/critical_hitbox.dart';
 import 'package:survival_zombie/world/game_main.dart';
@@ -37,11 +39,11 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   final JoystickComponent joystickMove;
   final JoystickComponent joystickAngle;
   final CameraComponent camera;
-  final images = Images();
 
   Player(this.joystickMove, this.joystickAngle, this.camera, {super.position})
       : super(
             anchor: Anchor.center,
+            priority: 1,
             nativeAngle: pi / 2,
             scale: Vector2.all(0.75)) {
     initializeHealthMixin(100,
@@ -57,7 +59,6 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   @override
   Future<void> onLoad() async {
     // load all images here ?
-    await images.load('player/bullet.png');
     animations = {
       PlayerState.handgunIdle: await game.loadSpriteAnimation(
         'player/handgun_idle.png',
@@ -160,30 +161,48 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   }
 
   void shootBullet() {
-    final ajustedAngle = angle + 0.4;
-    final offsetX = cos(ajustedAngle) * (size.x / 2 + 10);
-    final bulletX = position.x + offsetX;
+    // add a flash/glow animation
+    final muzzleImg = game.images.fromCache('effects/muzzle1.png');
+    final muzzle = SpriteComponent(
+        sprite: Sprite(muzzleImg, srcSize: Vector2(165, 165)),
+        anchor: Anchor.center,
+        position: Vector2(135, 80),
+        scale: Vector2(.25, .25),
+        priority: 2);
 
-    final offsetY = sin(ajustedAngle) * (size.x / 2 + 10);
-    final bulletY = position.y + offsetY;
+    add(muzzle);
+    muzzle.addAll([
+      OpacityEffect.fadeIn(EffectController(duration: 0.1, startDelay: 0)),
+      OpacityEffect.fadeOut(EffectController(duration: 0.1, startDelay: 0.1),
+          onComplete: () {
+        muzzle.removeFromParent();
+      })
+    ]);
+
+    final ajustedAngle = absoluteAngle + 0.4;
+    final offsetX = cos(ajustedAngle) * (size.x / 2);
+    final bulletX = absolutePosition.x + offsetX;
+
+    final offsetY = sin(ajustedAngle) * (size.x / 2);
+    final bulletY = absolutePosition.y + offsetY;
 
     final bulletDirection = Vector2(
-      cos(angle) * bulletSpeed,
-      sin(angle) * bulletSpeed,
+      cos(absoluteAngle) * bulletSpeed,
+      sin(absoluteAngle) * bulletSpeed,
     );
 
     final bullet = Bullet(
-      // position: Vector2(position.x + 117, position.y + 79),
       position: Vector2(bulletX, bulletY),
       player: this,
       speed: bulletDirection,
       angle: angle,
-      spriteImage: images.fromCache('player/bullet.png'),
+      spriteImage: game.images.fromCache('player/bullet.png'),
       lifeTime: 5.0,
       damage: bulletDamage,
     );
     // Ajoutez la balle à votre jeu
     world.add(bullet);
+    game.audioController.playSfx(SfxType.shoot);
     magazineAmmo.value -= 1;
   }
 

@@ -4,6 +4,10 @@ List<String> soundTypeToFilename(SfxType type) {
       return const [
         'hitmarker.mp3',
       ];
+    case SfxType.shoot:
+      return const [
+        'pistol.mp3',
+      ];
     case SfxType.critialHit:
       return const [
         'hitmarker.mp3',
@@ -29,6 +33,8 @@ List<String> soundTypeToFilename(SfxType type) {
 /// Allows control over loudness of different SFX types.
 double soundTypeToVolume(SfxType type) {
   switch (type) {
+    case SfxType.shoot:
+      return 0.2;
     case SfxType.playerDamage:
     case SfxType.hit:
       return 0.4;
@@ -40,4 +46,11 @@ double soundTypeToVolume(SfxType type) {
   }
 }
 
-enum SfxType { hit, critialHit, buttonTap, playerDamage, zombieHasTarget }
+enum SfxType {
+  hit,
+  critialHit,
+  shoot,
+  buttonTap,
+  playerDamage,
+  zombieHasTarget
+}
