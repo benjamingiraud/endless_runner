@@ -166,13 +166,16 @@ mixin Health on Component {
           image: bloodSpriteImg,
           srcSize: Vector2(110, 93),
         );
+        const stepsAnimations = [8, 10, 5, 10, 8, 8, 14, 7, 10];
+        final animationIndex = Random().nextInt(8) + 1;
 
         final bloodAnimation = bloodSpriteSheet.createAnimation(
-            row: Random().nextInt(9), stepTime: 0.1, to: 5, loop: false);
+            row: animationIndex,
+            stepTime: 0.1,
+            to: stepsAnimations[animationIndex],
+            loop: false);
         add(SpriteAnimationComponent(
-            animation: bloodAnimation,
-            removeOnFinish: true,
-            position: Vector2(50, 0)));
+            animation: bloodAnimation, removeOnFinish: true));
 
         // check if the zombie is not already rotating and then rotate it
         if (!(this as Zombie).hasTarget()) {

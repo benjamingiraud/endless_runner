@@ -5,6 +5,7 @@ import 'package:flame/cache.dart';
 import 'package:flame/geometry.dart';
 import 'package:flame/palette.dart';
 import 'package:flame/particles.dart';
+import 'package:flame/sprite.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:survival_zombie/audio/sounds.dart';
@@ -238,9 +239,9 @@ class Zombie extends SpriteAnimationGroupComponent<ZombieState>
     };
 
     final moveEffects = {
-      'arm1': Vector2(-40, -40),
-      'arm2': Vector2(-40, 40),
-      'head': Vector2(-60, 0),
+      'arm2': Vector2(Random().nextDouble() * -80, Random().nextDouble() * 80),
+      'arm1': Vector2(Random().nextDouble() * -80, Random().nextDouble() * -80),
+      'head': Vector2(Random().nextDouble() * -120, 0),
     };
 
     SpriteComponent createComponent(String name) {
@@ -260,7 +261,7 @@ class Zombie extends SpriteAnimationGroupComponent<ZombieState>
             EffectController(duration: 0.25),
           ),
           RotateEffect.by(
-            20,
+            Random().nextDouble() * 20,
             EffectController(duration: 0.25),
           )
         ]);
@@ -286,26 +287,39 @@ class Zombie extends SpriteAnimationGroupComponent<ZombieState>
   }
 
   void explode() {
-    final particleComponent = ParticleSystemComponent(
-      particle: Particle.generate(
-        count: 200,
-        lifespan: 1,
-        generator: (i) => AcceleratedParticle(
-          acceleration: Vector2(0, Random().nextDouble() * 100 - 50),
-          speed: Vector2(Random().nextDouble() * 100 - 50,
-              Random().nextDouble() * 100 - 50),
-          child: CircleParticle(
-            radius: Random().nextDouble() * 2 + 1, // rayon de la particule
-            paint: const PaletteEntry(Color.fromARGB(255, 156, 41, 33)).paint(),
-          ),
-        ),
-      ),
-      anchor: Anchor.center,
-      position: absolutePosition,
+    final bloodSpriteImg = game.images.fromCache('effects/blood.png');
+    final bloodSpriteSheet = SpriteSheet(
+      image: bloodSpriteImg,
+      srcSize: Vector2(110, 93),
     );
+    final bloodAnimation = bloodSpriteSheet.createAnimation(
+        row: 6, stepTime: 0.1, to: 14, loop: false);
+
+    // final particleComponent = ParticleSystemComponent(
+    //   particle: Particle.generate(
+    //     count: 200,
+    //     lifespan: 1,
+    //     generator: (i) => AcceleratedParticle(
+    //       acceleration: Vector2(0, Random().nextDouble() * 100 - 50),
+    //       speed: Vector2(Random().nextDouble() * 100 - 50,
+    //           Random().nextDouble() * 100 - 50),
+    //       child: CircleParticle(
+    //         radius: Random().nextDouble() * 2 + 1, // rayon de la particule
+    //         paint: const PaletteEntry(Color.fromARGB(255, 156, 41, 33)).paint(),
+    //       ),
+    //     ),
+    //   ),
+    //   anchor: Anchor.center,
+    //   position: absolutePosition,
+    // );
     split();
     removeFromParent();
-    world.add(particleComponent);
+    world.add(SpriteAnimationComponent(
+        animation: bloodAnimation,
+        removeOnFinish: true,
+        position: absolutePosition,
+        anchor: Anchor.center));
+    // world.add(particleComponent);
   }
 }
 

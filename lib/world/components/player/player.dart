@@ -18,8 +18,10 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
         HasWorldReference<World>,
         HasGameReference<GameMain>,
         Health {
+  final currentWeapon = ValueNotifier("shotgun");
   final totalAmmo = ValueNotifier(9999);
   final magazineAmmo = ValueNotifier(8);
+  
   double bulletSpeed = 2000.0;
   double bulletDamage = 12.5;
   double shootingInterval = 0.5; // Intervalle de tir en secondes
@@ -91,12 +93,43 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
           stepTime: reloadInterval / 15,
         ),
       ),
+      PlayerState.shotgunIle: await game.loadSpriteAnimation(
+        'player/shotgun_idle.png',
+        SpriteAnimationData.sequenced(
+          amount: 20,
+          textureSize: Vector2(157, 104),
+          stepTime: 0.1,
+        ),
+      ),
+      PlayerState.shotgunMove: await game.loadSpriteAnimation(
+        'player/shotgun_move.png',
+        SpriteAnimationData.sequenced(
+          amount: 20,
+          textureSize: Vector2(157, 103),
+          stepTime: 0.1,
+        ),
+      ),
+      PlayerState.shotgunShoot: await game.loadSpriteAnimation(
+        'player/shotgun_shoot.png',
+        SpriteAnimationData.sequenced(
+          amount: 3,
+          textureSize: Vector2(156, 103),
+          stepTime: shootingInterval / 3,
+        ),
+      ),
+      PlayerState.shotgunReload: await game.loadSpriteAnimation(
+        'player/shotgun_reload.png',
+        SpriteAnimationData.sequenced(
+          amount: 20,
+          textureSize: Vector2(161, 109),
+          stepTime: reloadInterval / 20,
+        ),
+      ),
     };
     // The starting state will be that the player is idle with handgun.
-    current = PlayerState.handgunIdle;
+    current = getIdle();
 
-    add(CircleHitbox(radius: size.x / 3, position: size / 6)
-      ..renderShape = false);
+    add(CircleHitbox(radius: size.x / 3, position: size / 6));
 
     final healthBarHud = HudMarginComponent(
       margin: const EdgeInsets.only(
@@ -108,7 +141,7 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
 
     magazineAmmo.addListener(() {
       if (magazineAmmo.value == 0) {
-        current = PlayerState.handgunReload;
+        current = getReload();
         reloadTimer = Timer(reloadInterval, onTick: () {
           const int reloadAmmount = 8;
           if (totalAmmo.value >= reloadAmmount) {
@@ -125,6 +158,50 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   bool canShoot() => magazineAmmo.value > 0 && !hasShot;
   bool hasShot = false;
 
+  PlayerState getIdle() {
+    switch (currentWeapon.value) {
+      case 'handgun':
+        return PlayerState.handgunIdle;
+      case 'shotgun':
+        return PlayerState.shotgunIle;
+      default:
+        return PlayerState.handgunIdle;
+    }
+  }
+
+  PlayerState getMove() {
+    switch (currentWeapon.value) {
+      case 'handgun':
+        return PlayerState.handgunMove;
+      case 'shotgun':
+        return PlayerState.shotgunMove;
+      default:
+        return PlayerState.handgunMove;
+    }
+  }
+
+  PlayerState getShoot() {
+    switch (currentWeapon.value) {
+      case 'handgun':
+        return PlayerState.handgunShoot;
+      case 'shotgun':
+        return PlayerState.shotgunShoot;
+      default:
+        return PlayerState.handgunShoot;
+    }
+  }
+
+  PlayerState getReload() {
+    switch (currentWeapon.value) {
+      case 'handgun':
+        return PlayerState.handgunReload;
+      case 'shotgun':
+        return PlayerState.shotgunReload;
+      default:
+        return PlayerState.handgunReload;
+    }
+  }
+
   @override
   void update(double dt) {
     super.update(dt);
@@ -139,17 +216,17 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
       }
       if (!isShooting()) {
         angle = joystickMove.delta.screenAngle() - relativeAngle;
-        current = PlayerState.handgunMove;
+        current = getMove();
       }
     } else if (!isShooting()) {
-      current = PlayerState.handgunIdle;
+      current = getIdle();
     }
 
     if (isShooting()) {
       angle = joystickAngle.delta.screenAngle() - relativeAngle;
 
       if (canShoot()) {
-        current = PlayerState.handgunShoot;
+        current = getShoot();
         shootBullet();
         hasShot = true;
         shootingTimer = Timer(shootingInterval, onTick: () {
@@ -224,4 +301,14 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   }
 }
 
-enum PlayerState { handgunIdle, handgunMove, handgunShoot, handgunReload }
+enum PlayerState {
+  handgunIdle,
+  handgunMove,
+  handgunShoot,
+  handgunReload,
+
+  shotgunIle,
+  shotgunMove,
+  shotgunShoot,
+  shotgunReload
+}
