@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:survival_zombie/audio/audio_controller.dart';
 import 'package:survival_zombie/world/components/player/player.dart';
 import 'package:survival_zombie/world/components/zombie.dart';
@@ -51,13 +53,12 @@ class GameMain extends FlameGame
 
   @override
   Future<void> onLoad() async {
-    mapComponent = await TiledComponent.load('test.tmx', Vector2.all(32));
+    mapComponent = await TiledComponent.load('zombie_map_1.tmx', Vector2.all(32));
     world.add(mapComponent);
+    world.add(ScreenHitbox());
 
     final knobPaint = BasicPalette.black.withAlpha(150).paint();
     final backgroundPaint = BasicPalette.black.withAlpha(100).paint();
-
-    world.add(ScreenHitbox());
 
     joystickMove = JoystickComponent(
       knob: CircleComponent(radius: 15, paint: knobPaint),
@@ -70,21 +71,25 @@ class GameMain extends FlameGame
       margin: const EdgeInsets.only(right: 15, bottom: 15),
     );
 
+    camera.viewport.add(joystickMove);
+    camera.viewport.add(joystickAngle);
+
     await images.load('player/bullet.png');
+    await images.load('player/shotgun_shell.png');
+    await images.load('player/shotgun_bullet.png');
     await images.load('effects/muzzle1.png');
+    await images.load('effects/muzzle2.png');
     await images.load('effects/blood.png');
+    await images.load('effects/dash.png');
+    
     player = Player(joystickMove, joystickAngle, camera,
         position: Vector2(mapComponent.size.x / 2, mapComponent.size.y / 2));
     world.add(player);
-
     player.healthNotifier.addListener(() {
       if (player.healthNotifier.value <= 0) {
-        pauseEngine();
+        // pauseEngine();
       }
     });
-
-    camera.viewport.add(joystickMove);
-    camera.viewport.add(joystickAngle);
 
     camera.setBounds(
         Rectangle.fromLTWH(screenWidth / 2, screenHeight / 2,
@@ -131,6 +136,7 @@ class GameMain extends FlameGame
       camera.viewport.addAll([speedWithMargin, ammoWithMargin]);
     }
 
+    // Add enemies
     // world.add(
     //   SpawnComponent.periodRange(
     //     factory: (_) => Zombie(),
@@ -159,8 +165,16 @@ class GameMain extends FlameGame
             mapComponent.size.x / 2 + 400, mapComponent.size.y / 2 + 200),
         currentHealth: 100,
         maxHealth: 100));
-    // world.add(Zombie(
-    //     position: Vector2(200, 400), currentHealth: 100, maxHealth: 100));
+
+    for (var i = 0; i < 7; i++) {
+      world.add(Zombie(
+          position: Vector2(
+            Random().nextDouble() * mapComponent.size.x,
+            Random().nextDouble() * mapComponent.size.y,
+          ),
+          currentHealth: 100,
+          maxHealth: 100));
+    }
   }
 
   @override
@@ -184,11 +198,15 @@ class GameMain extends FlameGame
     // When the world is mounted in the game we add a back button widget as an
     // overlay so that the player can go back to the previous screen.
     overlays.add(GameScreen.backButtonKey);
+    overlays.add(GameScreen.switchWeaponButtonKey);
+    overlays.add(GameScreen.dashButtonKey);
   }
 
   @override
   void onRemove() {
     overlays.remove(GameScreen.backButtonKey);
+    overlays.remove(GameScreen.switchWeaponButtonKey);
+    overlays.remove(GameScreen.dashButtonKey);
   }
 
   // Camera zoom

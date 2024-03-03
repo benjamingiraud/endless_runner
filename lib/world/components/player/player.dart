@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flame/effects.dart';
+import 'package:flame/sprite.dart';
 import 'package:survival_zombie/audio/sounds.dart';
 import 'package:survival_zombie/world/components/bullet.dart';
 import 'package:survival_zombie/world/components/critical_hitbox.dart';
@@ -18,16 +19,20 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
         HasWorldReference<World>,
         HasGameReference<GameMain>,
         Health {
-  final currentWeapon = ValueNotifier("shotgun");
+  final currentWeapon = ValueNotifier("handgun");
   final totalAmmo = ValueNotifier(9999);
   final magazineAmmo = ValueNotifier(8);
-  
+
   double bulletSpeed = 2000.0;
   double bulletDamage = 12.5;
+  double bulletLifeTime = 5.0;
   double shootingInterval = 0.5; // Intervalle de tir en secondes
   double reloadInterval = 2.0; // Intervalle de réchargement en secondes
   Timer? shootingTimer;
   Timer? reloadTimer;
+
+  double dashInterval = 5.0;
+  Timer? dashTimer;
 
   // Pixels/s
   double endurance = 100.0;
@@ -50,7 +55,7 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     initializeHealthMixin(100,
         maxShield: 100,
         currentShield: 50,
-        showText: true,
+        showText: false,
         shouldRender: false,
         barWidth: 200,
         barHeight: 20,
@@ -141,16 +146,40 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
 
     magazineAmmo.addListener(() {
       if (magazineAmmo.value == 0) {
-        current = getReload();
-        reloadTimer = Timer(reloadInterval, onTick: () {
-          const int reloadAmmount = 8;
-          if (totalAmmo.value >= reloadAmmount) {
-            totalAmmo.value -= reloadAmmount;
-            magazineAmmo.value = reloadAmmount;
-          }
-        });
+        if (currentWeapon.value == 'shotgun') {
+          shotgunReload();
+        } else {
+          current = getReload();
+          reloadTimer = Timer(reloadInterval, onTick: () {
+            const int reloadAmmount = 8;
+            if (totalAmmo.value >= reloadAmmount) {
+              totalAmmo.value -= reloadAmmount;
+              magazineAmmo.value = reloadAmmount;
+            }
+          });
+        }
       }
     });
+
+    currentWeapon.addListener(() {
+      if (currentWeapon.value == 'handgun') {
+        size = Vector2(127, 108);
+        bulletSpeed = 2000.0;
+        bulletDamage = 12.5;
+        bulletLifeTime = 5.0;
+        shootingInterval = 0.5; // Intervalle de tir en secondes
+        reloadInterval = 2.0; // Intervalle de réchargement en secondes
+      } else if (currentWeapon.value == 'shotgun') {
+        size = Vector2(157, 104);
+
+        bulletSpeed = 1500.0;
+        bulletDamage = 15.0;
+        bulletLifeTime = 0.125;
+        shootingInterval = 1.0; // Intervalle de tir en secondes
+        reloadInterval = 1.0; // Intervalle de réchargement en secondes
+      }
+    });
+    currentWeapon.value = 'shotgun';
   }
 
   bool isShooting() => !joystickAngle.delta.isZero();
@@ -158,6 +187,53 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   bool canShoot() => magazineAmmo.value > 0 && !hasShot;
   bool hasShot = false;
 
+  bool canDash() => dashTimer == null;
+
+  void shotgunReload() {
+    current = getReload();
+    const int reloadAmmount = 8;
+    if (totalAmmo.value >= reloadAmmount &&
+        magazineAmmo.value < reloadAmmount) {
+      totalAmmo.value -= 1;
+      magazineAmmo.value += 1;
+      reloadTimer = Timer(reloadInterval, onTick: shotgunReload);
+    }
+  }
+
+  void switchWeapon() {
+    if (currentWeapon.value == 'handgun') {
+      currentWeapon.value = 'shotgun';
+    } else {
+      currentWeapon.value = 'handgun';
+    }
+  }
+
+  void dash() {
+    dashTimer = Timer(dashInterval, onTick: () => dashTimer = null);
+
+    final bloodSpriteImg = game.images.fromCache('effects/dash.png');
+    final bloodSpriteSheet = SpriteSheet(
+      image: bloodSpriteImg,
+      srcSize: Vector2(64, 64),
+    );
+
+    final dashAnimation = bloodSpriteSheet.createAnimation(
+        row: 0, stepTime: 0.1, to: 6, loop: false);
+    world.add(SpriteAnimationComponent(
+        animation: dashAnimation,
+        removeOnFinish: true,
+        scale: Vector2.all(2.5),
+        position: absolutePosition - Vector2(size.x, size.y),
+        priority: 1));
+
+    if (isMoving()) {
+      position.add(joystickMove.relativeDelta * 200.0);
+    } else {
+      position.add(Vector2(200.0, 0.0)..rotate(angle));
+    }
+  }
+
+  // Player States
   PlayerState getIdle() {
     switch (currentWeapon.value) {
       case 'handgun':
@@ -202,11 +278,68 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     }
   }
 
+  // Guns
+  String shootMuzzle() {
+    switch (currentWeapon.value) {
+      case 'handgun':
+        return 'muzzle1';
+      case 'shotgun':
+        return 'muzzle2';
+      default:
+        return 'muzzle1';
+    }
+  }
+
+  Vector2 shootMuzzlePosition() {
+    switch (currentWeapon.value) {
+      case 'handgun':
+        return Vector2(135, 80);
+      case 'shotgun':
+        return Vector2(170, 75);
+      default:
+        return Vector2(135, 80);
+    }
+  }
+
+  Vector2 shootMuzzleScale() {
+    switch (currentWeapon.value) {
+      case 'handgun':
+        return Vector2(.25, .25);
+      case 'shotgun':
+        return Vector2(.5, .5);
+      default:
+        return Vector2(.25, .25);
+    }
+  }
+
+  String shootBulletSprite() {
+    switch (currentWeapon.value) {
+      case 'handgun':
+        return 'bullet';
+      case 'shotgun':
+        return 'shotgun_bullet';
+      default:
+        return 'bullet';
+    }
+  }
+
+  SfxType shootSfx() {
+    switch (currentWeapon.value) {
+      case 'handgun':
+        return SfxType.shoot;
+      case 'shotgun':
+        return SfxType.shotgun;
+      default:
+        return SfxType.shoot;
+    }
+  }
+
   @override
   void update(double dt) {
     super.update(dt);
     shootingTimer?.update(dt);
     reloadTimer?.update(dt);
+    dashTimer?.update(dt);
 
     if (isMoving()) {
       _lastSize.setFrom(size);
@@ -238,12 +371,12 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
 
   void shootBullet() {
     // add a flash/glow animation
-    final muzzleImg = game.images.fromCache('effects/muzzle1.png');
+    final muzzleImg = game.images.fromCache('effects/${shootMuzzle()}.png');
     final muzzle = SpriteComponent(
         sprite: Sprite(muzzleImg, srcSize: Vector2(165, 165)),
         anchor: Anchor.center,
-        position: Vector2(135, 80),
-        scale: Vector2(.25, .25),
+        position: shootMuzzlePosition(),
+        scale: shootMuzzleScale(),
         priority: 2);
 
     add(muzzle);
@@ -270,16 +403,39 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     final bullet = Bullet(
       position: Vector2(bulletX, bulletY),
       player: this,
-      speed: bulletDirection,
       angle: angle,
-      spriteImage: game.images.fromCache('player/bullet.png'),
-      lifeTime: 5.0,
+      spriteImage: game.images.fromCache('player/${shootBulletSprite()}.png'),
+      speed: bulletDirection,
+      lifeTime: bulletLifeTime,
       damage: bulletDamage,
     );
-    // Ajoutez la balle à votre jeu
+
     world.add(bullet);
-    game.audioController.playSfx(SfxType.shoot);
+    game.audioController.playSfx(shootSfx());
     magazineAmmo.value -= 1;
+
+    // if shotgun add 7 other bullets with different direction
+    if (currentWeapon.value == 'shotgun') {
+      const spreadAngle = 1.0; // angle of spread in degrees
+      const numBullets = 7;
+
+      for (var i = 0; i < numBullets; i++) {
+        final spread = (spreadAngle / (numBullets - 1)) * i - spreadAngle / 2;
+        final bulletDirectionWithSpread = Vector2.copy(bulletDirection);
+        bulletDirectionWithSpread.rotate(spread);
+
+        final bullet = Bullet(
+          position: Vector2(bulletX, bulletY),
+          player: this,
+          angle: angle + spread,
+          spriteImage: game.images.fromCache('player/shotgun_bullet.png'),
+          speed: bulletDirectionWithSpread,
+          lifeTime: bulletLifeTime,
+          damage: bulletDamage,
+        );
+        world.add(bullet);
+      }
+    }
   }
 
   @override

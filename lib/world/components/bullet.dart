@@ -69,7 +69,7 @@ class Bullet extends SpriteComponent
           intersectionPoints: intersectionPoints);
     }
 
-    if (other is! ScreenHitbox) {
+    if (other is! ScreenHitbox && other is! Bullet) {
       lifeTimeTimer?.stop();
       removeFromParent();
     }

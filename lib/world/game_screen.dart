@@ -14,8 +14,9 @@ import 'package:go_router/go_router.dart';
 class GameScreen extends StatelessWidget {
   const GameScreen({super.key});
 
-  static const String winDialogKey = 'win_dialog';
   static const String backButtonKey = 'back_buttton';
+  static const String switchWeaponButtonKey = 'switch_button';
+  static const String dashButtonKey = 'dash_button';
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +28,10 @@ class GameScreen extends StatelessWidget {
     return Scaffold(
       body: GameWidget<GameMain>(
         key: const Key('play session'),
-        game: GameMain(audioController: audioController, screenWidth: screenWidth, screenHeight: screenHeight),
+        game: GameMain(
+            audioController: audioController,
+            screenWidth: screenWidth,
+            screenHeight: screenHeight),
         overlayBuilderMap: {
           backButtonKey: (BuildContext context, GameMain game) {
             return Positioned(
@@ -37,6 +41,28 @@ class GameScreen extends StatelessWidget {
                 icon: const Icon(Icons.menu),
                 color: Colors.white,
                 onPressed: GoRouter.of(context).pop,
+              ),
+            );
+          },
+          switchWeaponButtonKey: (BuildContext context, GameMain game) {
+            return Positioned(
+              bottom: 125,
+              right: 10,
+              child: IconButton.filled(
+                icon: const Icon(Icons.switch_access_shortcut),
+                color: Colors.white,
+                onPressed: game.player.switchWeapon,
+              ),
+            );
+          },
+          dashButtonKey: (BuildContext context, GameMain game) {
+            return Positioned(
+              bottom: 125,
+              right: 65,
+              child: IconButton.filled(
+                icon: const Icon(Icons.move_up),
+                color: Colors.white,
+                onPressed: game.player.canDash() ? game.player.dash : null,
               ),
             );
           },
