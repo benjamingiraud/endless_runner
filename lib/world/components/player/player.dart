@@ -200,7 +200,8 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   bool canShoot() => magazineAmmo.value > 0 && !hasShot;
   bool hasShot = false;
 
-  bool canDash() => dashTimer == null;
+  bool hasDashed = false;
+  bool canDash() => !hasDashed;
 
   void shotgunReload() {
     current = getReload();
@@ -222,27 +223,32 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   }
 
   void dash() {
-    dashTimer = Timer(dashInterval, onTick: () => dashTimer = null);
+    if (canDash()) {
+      hasDashed = true;
+      dashTimer = Timer(dashInterval, onTick: () {
+        hasDashed = false;
+      });
 
-    final bloodSpriteImg = game.images.fromCache('effects/dash.png');
-    final bloodSpriteSheet = SpriteSheet(
-      image: bloodSpriteImg,
-      srcSize: Vector2(64, 64),
-    );
+      final bloodSpriteImg = game.images.fromCache('effects/dash.png');
+      final bloodSpriteSheet = SpriteSheet(
+        image: bloodSpriteImg,
+        srcSize: Vector2(64, 64),
+      );
 
-    final dashAnimation = bloodSpriteSheet.createAnimation(
-        row: 0, stepTime: 0.1, to: 6, loop: false);
-    world.add(SpriteAnimationComponent(
-        animation: dashAnimation,
-        removeOnFinish: true,
-        scale: Vector2.all(2.5),
-        position: absolutePosition - Vector2(size.x, size.y),
-        priority: 1));
+      final dashAnimation = bloodSpriteSheet.createAnimation(
+          row: 0, stepTime: 0.1, to: 6, loop: false);
+      world.add(SpriteAnimationComponent(
+          animation: dashAnimation,
+          removeOnFinish: true,
+          scale: Vector2.all(2.5),
+          position: absolutePosition - Vector2(size.x, size.y),
+          priority: 1));
 
-    if (isMoving()) {
-      position.add(joystickMove.relativeDelta * 200.0);
-    } else {
-      position.add(Vector2(200.0, 0.0)..rotate(angle));
+      if (isMoving()) {
+        position.add(joystickMove.relativeDelta * 200.0);
+      } else {
+        position.add(Vector2(200.0, 0.0)..rotate(angle));
+      }
     }
   }
 
