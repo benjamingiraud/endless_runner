@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:survival_zombie/audio/audio_controller.dart';
+import 'package:survival_zombie/world/components/collision.dart';
 import 'package:survival_zombie/world/components/player/player.dart';
 import 'package:survival_zombie/world/components/zombie.dart';
 import 'package:flame/collisions.dart';
@@ -53,9 +54,21 @@ class GameMain extends FlameGame
 
   @override
   Future<void> onLoad() async {
-    mapComponent = await TiledComponent.load('zombie_map_1.tmx', Vector2.all(32));
+    mapComponent =
+        await TiledComponent.load('zombie_map_1.tmx', Vector2.all(32));
+
     world.add(mapComponent);
     world.add(ScreenHitbox());
+
+    final collisions = mapComponent.tileMap.getLayer<ObjectGroup>("collisions");
+    for (final collision in collisions!.objects) {
+      if (collision.isRectangle) {
+        world.add(Collision.rectangle(
+            position: Vector2(collision.x, collision.y),
+            size: Vector2(collision.width, collision.height)));
+      } else if (collision.isEllipse) {
+      }
+    }
 
     final knobPaint = BasicPalette.black.withAlpha(150).paint();
     final backgroundPaint = BasicPalette.black.withAlpha(100).paint();
@@ -81,7 +94,7 @@ class GameMain extends FlameGame
     await images.load('effects/muzzle2.png');
     await images.load('effects/blood.png');
     await images.load('effects/dash.png');
-    
+
     player = Player(joystickMove, joystickAngle, camera,
         position: Vector2(mapComponent.size.x / 2, mapComponent.size.y / 2));
     world.add(player);

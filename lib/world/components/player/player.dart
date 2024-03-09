@@ -41,6 +41,9 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   double relativeAngle = -80.0;
   late final Vector2 _lastSize = size.clone();
   late final Transform2D _lastTransform = transform.clone();
+  late double _lastX = position.x;
+  late double _lastY = position.y;
+  late double _lastAngle = angle;
 
   final JoystickComponent joystickMove;
   final JoystickComponent joystickAngle;
@@ -134,7 +137,7 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     // The starting state will be that the player is idle with handgun.
     current = getIdle();
 
-    add(CircleHitbox(radius: size.x / 3, position: size / 6));
+    add(CircleHitbox(radius: size.x / 4, position: size / 4)..debugMode = true);
 
     final healthBarHud = HudMarginComponent(
       margin: const EdgeInsets.only(
@@ -171,7 +174,6 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
         reloadInterval = 2.0; // Intervalle de réchargement en secondes
       } else if (currentWeapon.value == 'shotgun') {
         size = Vector2(157, 104);
-
         bulletSpeed = 1500.0;
         bulletDamage = 15.0;
         bulletLifeTime = 0.125;
@@ -344,11 +346,27 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     if (isMoving()) {
       _lastSize.setFrom(size);
       _lastTransform.setFrom(transform);
-      if (activeCollisions.isEmpty) {
-        position.add(joystickMove.relativeDelta * speed * dt);
+      _lastX = position.x;
+      _lastY = position.y;
+      position.x += joystickMove.relativeDelta.x * speed * dt;
+      if (activeCollisions.isNotEmpty) {
+        position.x = _lastX;
       }
+
+      position.y += joystickMove.relativeDelta.y * speed * dt;
+      if (activeCollisions.isNotEmpty) {
+        position.y = _lastY;
+      }
+
+      // if (activeCollisions.isEmpty) {
+      // position.add(joystickMove.relativeDelta * speed * dt);
+      // }
       if (!isShooting()) {
+        _lastAngle = angle;
         angle = joystickMove.delta.screenAngle() - relativeAngle;
+        // if (activeCollisions.isNotEmpty) {
+        //   angle = _lastAngle;
+        // }
         current = getMove();
       }
     } else if (!isShooting()) {
@@ -416,7 +434,7 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
 
     // if shotgun add 7 other bullets with different direction
     if (currentWeapon.value == 'shotgun') {
-      const spreadAngle = 1.0; // angle of spread in degrees
+      const spreadAngle = 0.5; // angle of spread in degrees
       const numBullets = 7;
 
       for (var i = 0; i < numBullets; i++) {
@@ -445,8 +463,8 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   ) {
     if (other is! CriticalHitbox) {
       super.onCollisionStart(intersectionPoints, other);
-      transform.setFrom(_lastTransform);
-      size.setFrom(_lastSize);
+      // transform.setFrom(_lastTransform);
+      // size.setFrom(_lastSize);
     }
   }
 
