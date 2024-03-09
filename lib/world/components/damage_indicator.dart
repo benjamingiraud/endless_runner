@@ -19,7 +19,7 @@ class DamageIndicator extends PositionComponent {
           ? isPlayer
               ? const Color.fromARGB(255, 156, 41, 33)
               : isCritical
-                  ? Color.fromARGB(255, 221, 218, 43)
+                  ? const Color.fromARGB(255, 221, 218, 43)
                   : const Color.fromARGB(255, 255, 255, 255)
           : const Color(0xFF66BB6A),
       fontSize: fontSize.clamp(12.0, maxFontSize),

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 class Collision extends ShapeComponent {
   Collision.rectangle({super.position, super.size, super.priority}) {
-    add(RectangleHitbox()..isSolid = true..debugMode = true);
+    add(RectangleHitbox()..isSolid = true);
   }
   Collision.circle({super.position, required double radius, super.priority}) {
     add(CircleHitbox(radius: radius, collisionType: CollisionType.passive));

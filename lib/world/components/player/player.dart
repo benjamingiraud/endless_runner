@@ -43,11 +43,13 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   late final Transform2D _lastTransform = transform.clone();
   late double _lastX = position.x;
   late double _lastY = position.y;
-  late double _lastAngle = angle;
 
   final JoystickComponent joystickMove;
   final JoystickComponent joystickAngle;
   final CameraComponent camera;
+
+  late RectangleHitbox collisionHitbox;
+  late CircleHitbox healthHitbox;
 
   Player(this.joystickMove, this.joystickAngle, this.camera, {super.position})
       : super(
@@ -137,7 +139,14 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     // The starting state will be that the player is idle with handgun.
     current = getIdle();
 
-    add(CircleHitbox(radius: size.x / 4, position: size / 4)..debugMode = true);
+    healthHitbox = CircleHitbox(radius: size.x / 4, position: size / 4);
+    add(healthHitbox);
+
+    collisionHitbox = RectangleHitbox(
+      size: absoluteScaledSize / 2,
+      position: absoluteScaledSize / 2,
+    );
+    add(collisionHitbox);
 
     final healthBarHud = HudMarginComponent(
       margin: const EdgeInsets.only(
@@ -180,6 +189,8 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
         shootingInterval = 1.0; // Intervalle de tir en secondes
         reloadInterval = 1.0; // Intervalle de réchargement en secondes
       }
+      collisionHitbox.size = absoluteScaledSize / 2;
+      collisionHitbox.position = absoluteScaledSize / 2;
     });
     currentWeapon.value = 'shotgun';
   }
@@ -348,25 +359,19 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
       _lastTransform.setFrom(transform);
       _lastX = position.x;
       _lastY = position.y;
+
       position.x += joystickMove.relativeDelta.x * speed * dt;
-      if (activeCollisions.isNotEmpty) {
+      if (collisionHitbox.activeCollisions.isNotEmpty) {
         position.x = _lastX;
       }
 
       position.y += joystickMove.relativeDelta.y * speed * dt;
-      if (activeCollisions.isNotEmpty) {
+      if (collisionHitbox.activeCollisions.isNotEmpty) {
         position.y = _lastY;
       }
 
-      // if (activeCollisions.isEmpty) {
-      // position.add(joystickMove.relativeDelta * speed * dt);
-      // }
       if (!isShooting()) {
-        _lastAngle = angle;
         angle = joystickMove.delta.screenAngle() - relativeAngle;
-        // if (activeCollisions.isNotEmpty) {
-        //   angle = _lastAngle;
-        // }
         current = getMove();
       }
     } else if (!isShooting()) {
